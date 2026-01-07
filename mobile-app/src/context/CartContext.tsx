@@ -173,12 +173,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const cartTotal = cart.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 1)), 0);
-    const cartCount = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+    const cartTotal = React.useMemo(() =>
+        cart.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 1)), 0),
+        [cart]
+    );
+
+    const cartCount = React.useMemo(() =>
+        cart.reduce((total, item) => total + (item.quantity || 1), 0),
+        [cart]
+    );
 
     useEffect(() => {
         loadCart();
-    }, [loadCart]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only load cart once on mount
 
     return (
         <CartContext.Provider value={{

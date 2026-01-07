@@ -48,8 +48,15 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return wishlist.some((p) => p._id === productId);
     };
 
+    const contextValue = React.useMemo(() => ({
+        wishlist,
+        addToWishlist,
+        removeFromWishlist,
+        isInWishlist
+    }), [wishlist, addToWishlist, removeFromWishlist, isInWishlist]);
+
     return (
-        <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist, isInWishlist }}>
+        <WishlistContext.Provider value={contextValue}>
             {children}
         </WishlistContext.Provider>
     );

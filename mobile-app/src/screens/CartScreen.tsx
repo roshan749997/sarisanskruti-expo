@@ -6,8 +6,10 @@ import {
     Image,
     TouchableOpacity,
     StyleSheet,
-    Alert
+    Alert,
+    Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -83,50 +85,56 @@ const CartScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Cart ({cart.length})</Text>
-                <TouchableOpacity onPress={() => Alert.alert('Clear Cart', 'Are you sure?', [{ text: 'Cancel' }, { text: 'Yes', onPress: clearCart }])} style={{ padding: 5 }}>
-                    <Ionicons name="trash-bin-outline" size={24} color="#333" />
-                </TouchableOpacity>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
+                        <Ionicons name="arrow-back" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Cart ({cart.length})</Text>
+                    <TouchableOpacity onPress={() => Alert.alert('Clear Cart', 'Are you sure?', [{ text: 'Cancel' }, { text: 'Yes', onPress: clearCart }])} style={{ padding: 5 }}>
+                        <Ionicons name="trash-bin-outline" size={24} color="#333" />
+                    </TouchableOpacity>
+                </View>
+
+                <FlatList
+                    data={cart}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.id}
+                    contentContainerStyle={styles.list}
+                />
+
+                <View style={styles.footer}>
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Sub Total</Text>
+                        <Text style={styles.summaryValue}>₹{cartTotal.toLocaleString()}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Shipping & Tax</Text>
+                        <Text style={styles.summaryValue}>₹{(shippingCost + tax).toLocaleString()}</Text>
+                    </View>
+                    <View style={[styles.summaryRow, styles.totalRow]}>
+                        <Text style={styles.totalLabel}>Total</Text>
+                        <Text style={styles.totalValue}>₹{total.toLocaleString()}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.checkoutBtn}
+                        onPress={() => navigation.navigate('Address')}
+                    >
+                        <Text style={styles.checkoutText}>Checkout</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-
-            <FlatList
-                data={cart}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.list}
-            />
-
-            <View style={styles.footer}>
-                <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Sub Total</Text>
-                    <Text style={styles.summaryValue}>₹{cartTotal.toLocaleString()}</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Shipping & Tax</Text>
-                    <Text style={styles.summaryValue}>₹{(shippingCost + tax).toLocaleString()}</Text>
-                </View>
-                <View style={[styles.summaryRow, styles.totalRow]}>
-                    <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>₹{total.toLocaleString()}</Text>
-                </View>
-
-                <TouchableOpacity
-                    style={styles.checkoutBtn}
-                    onPress={() => navigation.navigate('Address')}
-                >
-                    <Text style={styles.checkoutText}>Checkout</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
@@ -135,7 +143,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: 50, // safe area mock
+        paddingTop: Platform.OS === 'android' ? 15 : 0,
         paddingBottom: 15,
         paddingHorizontal: 15,
         backgroundColor: '#fff',

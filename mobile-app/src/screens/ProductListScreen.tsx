@@ -11,7 +11,8 @@ import {
     Modal,
     ScrollView,
     Dimensions,
-    SafeAreaView
+    SafeAreaView,
+    Platform
 } from 'react-native';
 import { SafeAreaView as SafeArea } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -137,7 +138,7 @@ const ProductListScreen = () => {
         setFilteredProducts(result);
     }, [products, selectedPriceRange, selectedFabrics]);
 
-    const getSortedProducts = () => {
+    const getSortedProducts = useMemo(() => {
         let sorted = [...filteredProducts];
         switch (sortOption) {
             case 'price-low-high':
@@ -151,7 +152,7 @@ const ProductListScreen = () => {
                 break;
         }
         return sorted;
-    };
+    }, [filteredProducts, sortOption]);
 
     const toggleFabric = (fabric: string) => {
         setSelectedFabrics(prev =>
@@ -166,7 +167,7 @@ const ProductListScreen = () => {
 
     const activeFilterCount = selectedFabrics.length + (selectedPriceRange ? 1 : 0);
 
-    const renderProduct = ({ item }: { item: any }) => {
+    const renderProduct = React.useCallback(({ item }: { item: any }) => {
         const price = item.price || item.mrp || 0;
         return (
             <Pressable
@@ -193,190 +194,207 @@ const ProductListScreen = () => {
                 </View>
             </Pressable>
         );
-    };
+    }, [navigation]);
+
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </TouchableOpacity>
-                <View style={{ alignItems: 'center' }}>
-                    <Text style={styles.headerTitle}>{title || category || 'Products'}</Text>
-                    <View style={styles.headerLine} />
-                </View>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.iconBtn}>
-                    <Ionicons name="swap-vertical" size={22} color="#333" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Sub-Header with Filter Button */}
-            <View style={styles.subHeader}>
-                <Text style={styles.resultsText}>{filteredProducts.length} Products</Text>
-                <TouchableOpacity
-                    style={[styles.filterBtn, activeFilterCount > 0 && styles.activeFilterBtn]}
-                    onPress={() => setFilterModalVisible(true)}
-                >
-                    <Ionicons name="filter-outline" size={18} color={activeFilterCount > 0 ? "#fff" : "#333"} />
-                    <Text style={[styles.filterBtnText, activeFilterCount > 0 && { color: '#fff' }]}>Filters</Text>
-                    {activeFilterCount > 0 && (
-                        <View style={styles.badge}><Text style={styles.badgeText}>{activeFilterCount}</Text></View>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            {/* Active Filters Pills */}
-            {(selectedPriceRange || selectedFabrics.length > 0) && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillsContainer}>
-                    {selectedPriceRange && (
-                        <View style={styles.pill}>
-                            <Text style={styles.pillText}>{priceRanges.find(r => r.id === selectedPriceRange)?.label}</Text>
-                            <TouchableOpacity onPress={() => setSelectedPriceRange(null)}>
-                                <Ionicons name="close" size={16} color="#BA2C73" />
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                    {selectedFabrics.map(fabric => (
-                        <View key={fabric} style={styles.pill}>
-                            <Text style={styles.pillText}>{fabric}</Text>
-                            <TouchableOpacity onPress={() => toggleFabric(fabric)}>
-                                <Ionicons name="close" size={16} color="#BA2C73" />
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                    {(selectedPriceRange || selectedFabrics.length > 0) && (
-                        <TouchableOpacity onPress={resetFilters} style={{ marginLeft: 5, justifyContent: 'center' }}>
-                            <Text style={{ color: '#BA2C73', fontSize: 12, fontWeight: '600' }}>Clear All</Text>
-                        </TouchableOpacity>
-                    )}
-                </ScrollView>
-            )}
-
-            {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#BA2C73" />
-                </View>
-            ) : filteredProducts.length === 0 ? (
-                <View style={styles.center}>
-                    <Text style={{ color: '#666', fontSize: 16 }}>No products found matching filters.</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={getSortedProducts()}
-                    renderItem={renderProduct}
-                    keyExtractor={(item) => item._id}
-                    numColumns={2}
-                    contentContainerStyle={styles.listContainer}
-                />
-            )}
-
-            {/* Sort Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                    <Pressable style={styles.modalContent} onPress={() => { }}>
-                        <Text style={styles.modalTitle}>Sort By</Text>
-                        {['featured', 'price-low-high', 'price-high-low', 'newest'].map((opt) => (
-                            <TouchableOpacity
-                                key={opt}
-                                style={styles.optionItem}
-                                onPress={() => { setSortOption(opt); setModalVisible(false); }}
-                            >
-                                <Text style={[styles.optionText, sortOption === opt && styles.selectedOption]}>
-                                    {opt === 'price-low-high' ? 'Price: Low to High' :
-                                        opt === 'price-high-low' ? 'Price: High to Low' :
-                                            opt === 'newest' ? 'Newest' : 'Featured'}
-                                </Text>
-                                {sortOption === opt && <Ionicons name="checkmark" size={20} color="#BA2C73" />}
-                            </TouchableOpacity>
-                        ))}
-                    </Pressable>
-                </Pressable>
-            </Modal>
-
-            {/* Filter Modal */}
-            <Modal
-                animationType="slide"
-                visible={filterModalVisible}
-                onRequestClose={() => setFilterModalVisible(false)}
-            >
-                <SafeArea style={{ flex: 1, backgroundColor: '#fff' }}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Refine Results</Text>
-                        <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                            <Ionicons name="close" size={24} color="#000" />
-                        </TouchableOpacity>
+        <SafeArea style={styles.safeArea} edges={['bottom']}>
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <View style={{ alignItems: 'center' }}>
+                        <Text style={styles.headerTitle}>{title || category || 'Products'}</Text>
+                        <View style={styles.headerLine} />
                     </View>
+                    <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.iconBtn}>
+                        <Ionicons name="swap-vertical" size={22} color="#333" />
+                    </TouchableOpacity>
+                </View>
 
-                    <ScrollView style={{ flex: 1 }}>
-                        {/* Price Section */}
-                        <TouchableOpacity
-                            style={styles.filterSectionHeader}
-                            onPress={() => setOpenFilterSections(prev => ({ ...prev, price: !prev.price }))}
-                        >
-                            <Text style={styles.sectionTitle}>Price</Text>
-                            <Ionicons name={openFilterSections.price ? "chevron-up" : "chevron-down"} size={20} color="#666" />
-                        </TouchableOpacity>
-                        {openFilterSections.price && (
-                            <View style={styles.filterOptions}>
-                                {priceRanges.map(range => (
-                                    <TouchableOpacity
-                                        key={range.id}
-                                        style={styles.checkboxRow}
-                                        onPress={() => setSelectedPriceRange(range.id)}
-                                    >
-                                        <View style={[styles.radio, selectedPriceRange === range.id && styles.radioSelected]} />
-                                        <Text style={styles.optionLabel}>{range.label}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                {/* Sub-Header with Filter Button */}
+                <View style={styles.subHeader}>
+                    <Text style={styles.resultsText}>{filteredProducts.length} Products</Text>
+                    <TouchableOpacity
+                        style={[styles.filterBtn, activeFilterCount > 0 && styles.activeFilterBtn]}
+                        onPress={() => setFilterModalVisible(true)}
+                    >
+                        <Ionicons name="filter-outline" size={18} color={activeFilterCount > 0 ? "#fff" : "#333"} />
+                        <Text style={[styles.filterBtnText, activeFilterCount > 0 && { color: '#fff' }]}>Filters</Text>
+                        {activeFilterCount > 0 && (
+                            <View style={styles.badge}><Text style={styles.badgeText}>{activeFilterCount}</Text></View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                {/* Active Filters Pills */}
+                {(selectedPriceRange || selectedFabrics.length > 0) && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillsContainer}>
+                        {selectedPriceRange && (
+                            <View style={styles.pill}>
+                                <Text style={styles.pillText}>{priceRanges.find(r => r.id === selectedPriceRange)?.label}</Text>
+                                <TouchableOpacity onPress={() => setSelectedPriceRange(null)}>
+                                    <Ionicons name="close" size={16} color="#BA2C73" />
+                                </TouchableOpacity>
                             </View>
                         )}
-
-                        {/* Fabric Section */}
-                        <TouchableOpacity
-                            style={styles.filterSectionHeader}
-                            onPress={() => setOpenFilterSections(prev => ({ ...prev, material: !prev.material }))}
-                        >
-                            <Text style={styles.sectionTitle}>Fabric</Text>
-                            <Ionicons name={openFilterSections.material ? "chevron-up" : "chevron-down"} size={20} color="#666" />
-                        </TouchableOpacity>
-                        {openFilterSections.material && (
-                            <View style={styles.filterOptions}>
-                                {availableFabrics.map((fabric: any) => (
-                                    <TouchableOpacity
-                                        key={fabric}
-                                        style={styles.checkboxRow}
-                                        onPress={() => toggleFabric(fabric)}
-                                    >
-                                        <View style={[styles.checkbox, selectedFabrics.includes(fabric) && styles.checkboxSelected]}>
-                                            {selectedFabrics.includes(fabric) && <Ionicons name="checkmark" size={14} color="#fff" />}
-                                        </View>
-                                        <Text style={styles.optionLabel}>{fabric}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                        {selectedFabrics.map(fabric => (
+                            <View key={fabric} style={styles.pill}>
+                                <Text style={styles.pillText}>{fabric}</Text>
+                                <TouchableOpacity onPress={() => toggleFabric(fabric)}>
+                                    <Ionicons name="close" size={16} color="#BA2C73" />
+                                </TouchableOpacity>
                             </View>
+                        ))}
+                        {(selectedPriceRange || selectedFabrics.length > 0) && (
+                            <TouchableOpacity onPress={resetFilters} style={{ marginLeft: 5, justifyContent: 'center' }}>
+                                <Text style={{ color: '#BA2C73', fontSize: 12, fontWeight: '600' }}>Clear All</Text>
+                            </TouchableOpacity>
                         )}
                     </ScrollView>
+                )}
 
-                    <View style={styles.modalFooter}>
-                        <TouchableOpacity style={styles.resetBtn} onPress={resetFilters}>
-                            <Text style={styles.resetBtnText}>Clear All</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.applyBtn} onPress={() => setFilterModalVisible(false)}>
-                            <Text style={styles.applyBtnText}>Show {filteredProducts.length} Results</Text>
-                        </TouchableOpacity>
+                {loading ? (
+                    <View style={styles.center}>
+                        <ActivityIndicator size="large" color="#BA2C73" />
                     </View>
-                </SafeArea>
-            </Modal>
-        </View>
+                ) : filteredProducts.length === 0 ? (
+                    <View style={styles.center}>
+                        <Text style={{ color: '#666', fontSize: 16 }}>No products found matching filters.</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={getSortedProducts}
+                        renderItem={renderProduct}
+                        keyExtractor={(item) => item._id}
+                        numColumns={2}
+                        contentContainerStyle={styles.listContainer}
+                        removeClippedSubviews={Platform.OS === 'android'}
+                        maxToRenderPerBatch={10}
+                        windowSize={5}
+                        initialNumToRender={8}
+                        getItemLayout={(data, index) => ({
+                            length: 290,
+                            offset: 290 * index,
+                            index,
+                        })}
+                    />
+                )}
+
+                {/* Sort Modal */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                        <Pressable style={styles.modalContent} onPress={() => { }}>
+                            <Text style={styles.modalTitle}>Sort By</Text>
+                            {['featured', 'price-low-high', 'price-high-low', 'newest'].map((opt) => (
+                                <TouchableOpacity
+                                    key={opt}
+                                    style={styles.optionItem}
+                                    onPress={() => { setSortOption(opt); setModalVisible(false); }}
+                                >
+                                    <Text style={[styles.optionText, sortOption === opt && styles.selectedOption]}>
+                                        {opt === 'price-low-high' ? 'Price: Low to High' :
+                                            opt === 'price-high-low' ? 'Price: High to Low' :
+                                                opt === 'newest' ? 'Newest' : 'Featured'}
+                                    </Text>
+                                    {sortOption === opt && <Ionicons name="checkmark" size={20} color="#BA2C73" />}
+                                </TouchableOpacity>
+                            ))}
+                        </Pressable>
+                    </Pressable>
+                </Modal>
+
+                {/* Filter Modal */}
+                <Modal
+                    animationType="slide"
+                    visible={filterModalVisible}
+                    onRequestClose={() => setFilterModalVisible(false)}
+                >
+                    <SafeArea style={{ flex: 1, backgroundColor: '#fff' }}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Refine Results</Text>
+                            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={{ flex: 1 }}>
+                            {/* Price Section */}
+                            <TouchableOpacity
+                                style={styles.filterSectionHeader}
+                                onPress={() => setOpenFilterSections(prev => ({ ...prev, price: !prev.price }))}
+                            >
+                                <Text style={styles.sectionTitle}>Price</Text>
+                                <Ionicons name={openFilterSections.price ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+                            </TouchableOpacity>
+                            {openFilterSections.price && (
+                                <View style={styles.filterOptions}>
+                                    {priceRanges.map(range => (
+                                        <TouchableOpacity
+                                            key={range.id}
+                                            style={styles.checkboxRow}
+                                            onPress={() => setSelectedPriceRange(range.id)}
+                                        >
+                                            <View style={[styles.radio, selectedPriceRange === range.id && styles.radioSelected]} />
+                                            <Text style={styles.optionLabel}>{range.label}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Fabric Section */}
+                            <TouchableOpacity
+                                style={styles.filterSectionHeader}
+                                onPress={() => setOpenFilterSections(prev => ({ ...prev, material: !prev.material }))}
+                            >
+                                <Text style={styles.sectionTitle}>Fabric</Text>
+                                <Ionicons name={openFilterSections.material ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+                            </TouchableOpacity>
+                            {openFilterSections.material && (
+                                <View style={styles.filterOptions}>
+                                    {availableFabrics.map((fabric: any) => (
+                                        <TouchableOpacity
+                                            key={fabric}
+                                            style={styles.checkboxRow}
+                                            onPress={() => toggleFabric(fabric)}
+                                        >
+                                            <View style={[styles.checkbox, selectedFabrics.includes(fabric) && styles.checkboxSelected]}>
+                                                {selectedFabrics.includes(fabric) && <Ionicons name="checkmark" size={14} color="#fff" />}
+                                            </View>
+                                            <Text style={styles.optionLabel}>{fabric}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity style={styles.resetBtn} onPress={resetFilters}>
+                                <Text style={styles.resetBtnText}>Clear All</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.applyBtn} onPress={() => setFilterModalVisible(false)}>
+                                <Text style={styles.applyBtnText}>Show {filteredProducts.length} Results</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </SafeArea>
+                </Modal>
+            </View>
+        </SafeArea>
     );
 };
 
+
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',

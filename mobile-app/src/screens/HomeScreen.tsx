@@ -106,7 +106,7 @@ const HomeScreen = () => {
     }
   };
 
-  const renderProductCard = ({ item, isGrid = false }: { item: any, isGrid?: boolean }) => {
+  const renderProductCard = React.useCallback(({ item, isGrid = false }: { item: any, isGrid?: boolean }) => {
     const price = item.price || item.mrp || 0;
     const mrp = item.mrp || 0;
     const discount = item.discountPercent || 0;
@@ -159,9 +159,9 @@ const HomeScreen = () => {
         </View>
       </Pressable>
     );
-  };
+  }, [navigation, isInWishlist, handleWishlistToggle]);
 
-  const renderCategoryCircle = ({ item }: { item: any }) => (
+  const renderCategoryCircle = React.useCallback(({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.categoryCircleCard}
       onPress={() => navigation.navigate(item.path, item.params)}
@@ -175,7 +175,7 @@ const HomeScreen = () => {
         <View style={styles.categoryUnderline} />
       </View>
     </TouchableOpacity>
-  );
+  ), [navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -200,7 +200,8 @@ const HomeScreen = () => {
             setShowScrollTop(false);
           }
         }}
-        scrollEventThrottle={16}
+        scrollEventThrottle={400}
+        removeClippedSubviews={Platform.OS === 'android'}
       >
 
         {/* Hero Section */}
@@ -236,6 +237,9 @@ const HomeScreen = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoryList}
+            removeClippedSubviews={Platform.OS === 'android'}
+            maxToRenderPerBatch={5}
+            windowSize={5}
           />
         </View>
 
@@ -255,6 +259,10 @@ const HomeScreen = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.productList}
+              removeClippedSubviews={Platform.OS === 'android'}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              initialNumToRender={6}
             />
           )}
         </View>

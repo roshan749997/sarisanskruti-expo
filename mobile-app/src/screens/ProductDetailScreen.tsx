@@ -123,6 +123,7 @@ const ProductDetailScreen = () => {
                             setActiveImageIndex(slide);
                         }}
                         style={styles.imageScroll}
+                        removeClippedSubviews={Platform.OS === 'android'}
                     >
                         {images.map((img, index) => (
                             <Image key={index} source={{ uri: img }} style={styles.productImage} resizeMode="contain" />

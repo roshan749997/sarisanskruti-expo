@@ -153,7 +153,7 @@ const AddressScreen = () => {
         }
     };
 
-    const renderInput = (label, field, placeholder, keyboardType = 'default') => (
+    const renderInput = (label: string, field: keyof typeof formData, placeholder: string, keyboardType: any = 'default') => (
         <View style={styles.inputGroup}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
@@ -175,7 +175,7 @@ const AddressScreen = () => {
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
             <StatusBar barStyle="dark-content" backgroundColor="#f1f3f6" />
             <ScrollView style={styles.container}>
                 {/* Steps Header */}
@@ -317,7 +317,7 @@ const AddressScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                <View style={{ height: 100 }} />
+                <View style={{ height: 20 }} />
             </ScrollView>
         </SafeAreaView>
     );
@@ -327,7 +327,6 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f1f3f6',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     container: {
         flex: 1,
