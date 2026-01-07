@@ -3,69 +3,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.sarisanskruti.in/api';
 
-// In-memory cache for frequently accessed data
-const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 30000, // Increased to 30s for slower connections
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept-Encoding': 'gzip, deflate', // Enable compression
   },
-  // Enable HTTP keep-alive for faster subsequent requests
-  maxRedirects: 5,
 });
 
-// Request interceptor - add token and enable caching
+// Interceptor to add token to every request
 apiClient.interceptors.request.use(
   async (config) => {
-    // Add auth token
     const token = await AsyncStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Check cache for GET requests
-    if (config.method === 'get') {
-      const cacheKey = `${config.url}${JSON.stringify(config.params || {})}`;
-      const cached = cache.get(cacheKey);
-
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        // Return cached data
-        return Promise.reject({
-          __CACHED__: true,
-          data: cached.data
-        });
-      }
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-// Response interceptor - cache successful GET responses
-apiClient.interceptors.response.use(
-  (response) => {
-    // Cache GET responses
-    if (response.config.method === 'get') {
-      const cacheKey = `${response.config.url}${JSON.stringify(response.config.params || {})}`;
-      cache.set(cacheKey, {
-        data: response.data,
-        timestamp: Date.now()
-      });
-    }
-    return response;
-  },
-  (error) => {
-    // Handle cached responses
-    if (error.__CACHED__) {
-      return Promise.resolve({ data: error.data });
-    }
-    return Promise.reject(error);
-  }
 );
 
 export interface LoginResponse {
