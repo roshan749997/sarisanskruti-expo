@@ -18,9 +18,15 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.roshan_10062003.sarisanskrutimobile"
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "27cbb02a-2c5b-472a-b31d-58e76b1b8037"
+      }
+    }
   }
 }
 
