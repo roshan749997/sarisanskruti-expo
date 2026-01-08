@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../services/api';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -25,7 +25,7 @@ interface CartContextType {
     clearCart: () => Promise<void>;
     cartTotal: number;
     cartCount: number;
-    loadCart: () => Promise<void>;
+    loadCart: (silent?: boolean) => Promise<void>;
     loading: boolean;
 }
 
@@ -35,6 +35,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation<any>();
+
+    // Debounce refs
+    const updateTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
     const hasToken = async () => {
         const token = await AsyncStorage.getItem('auth_token');
@@ -62,19 +65,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    const loadCart = useCallback(async () => {
+    const loadCart = useCallback(async (silent = false) => {
         if (!(await hasToken())) {
             setCart([]);
             return;
         }
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             const data = await api.getCart();
             setCart(mapServerCartToUI(data));
         } catch (error) {
             console.log('Error loading cart', error);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, []);
 
@@ -97,33 +100,81 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const addToCart = async (productIdOrObj: any, quantity: number = 1) => {
         if (!(await requireAuth())) return;
 
-        let productId = productIdOrObj;
-        if (typeof productIdOrObj === 'object' && productIdOrObj) {
-            productId = productIdOrObj._id || productIdOrObj.id;
+        let product: any = null;
+        let productId: string;
+
+        if (typeof productIdOrObj === 'object' && productIdOrObj !== null) {
+            product = productIdOrObj;
+            productId = product._id || product.id;
+        } else {
+            productId = productIdOrObj;
         }
 
+        // Optimistic Update
+        const previousCart = [...cart];
+
+        // UI Update
+        setCart(prev => {
+            const existingIndex = prev.findIndex(i => i.id === productId);
+            if (existingIndex >= 0) {
+                const updated = [...prev];
+                updated[existingIndex] = {
+                    ...updated[existingIndex],
+                    quantity: updated[existingIndex].quantity + quantity
+                };
+                return updated;
+            } else if (product) {
+                // Add new item
+                const price = typeof product.price === 'number'
+                    ? product.price
+                    : (typeof product.mrp === 'number' ? Math.round(product.mrp - (product.mrp * (product.discountPercent || 0) / 100)) : 0);
+
+                const newItem: CartItem = {
+                    id: productId,
+                    name: product.title || product.name || 'Product',
+                    image: product.images?.image1 || product.image || '',
+                    price: price,
+                    originalPrice: product.mrp || 0,
+                    quantity: quantity,
+                    material: product.product_info?.SareeMaterial || product.material,
+                    brand: product.product_info?.brand || product.brand,
+                    color: product.product_info?.KurtiColor || product.product_info?.SareeColor || product.color,
+                };
+                return [...prev, newItem];
+            }
+            return prev;
+        });
+
         try {
-            setLoading(true);
+            // API Call
             await api.addToCart(productId, quantity);
-            await loadCart();
+            // Silent sync
+            loadCart(true).catch(e => console.log('Background cart sync failed', e));
+
         } catch (error) {
-            Alert.alert('Error', 'Failed to add to cart');
-            console.error(error);
-        } finally {
-            setLoading(false);
+            console.error('AddToCart error', error);
+            // Revert on failure
+            setCart(previousCart);
+            Alert.alert('Error', 'Failed to add to cart. Please check your connection.');
         }
     };
 
     const removeFromCart = async (productId: string) => {
         if (!(await requireAuth())) return;
+
+        const previousCart = [...cart];
+
+        // Optimistic UI
+        setCart(prev => prev.filter(item => item.id !== productId));
+
         try {
-            setLoading(true);
+            // No loading spinner for smoother experience
             await api.removeFromCart(productId);
-            await loadCart();
+            // Confirm with server silently
+            loadCart(true);
         } catch (error) {
+            setCart(previousCart);
             Alert.alert('Error', 'Failed to remove item');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -131,45 +182,59 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!(await requireAuth())) return;
 
         if (newQuantity < 1) {
+            // Delegate removal to removeFromCart logic
+            // But we should confirm first? Component should handle confirmation.
+            // If we are here, we assume action is confirmed or intended.
             await removeFromCart(productId);
             return;
         }
 
-        const currentItem = cart.find(i => i.id === productId);
-        const currentQty = currentItem?.quantity || 0;
-        const delta = newQuantity - currentQty;
+        const previousCart = [...cart];
 
-        if (delta === 0) return;
+        // Optimistic UI
+        setCart(prev => prev.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
 
-        try {
-            setLoading(true);
-            if (delta > 0) {
-                await api.addToCart(productId, delta);
-            } else {
-                // Because calling addToCart with negative might not work on all backends, 
-                // we play safe by removing and re-adding for now or assuming backend supports patch.
-                // But the frontend logic was: removed then added.
+        // Debounced API Sync
+        if (updateTimeouts.current[productId]) {
+            clearTimeout(updateTimeouts.current[productId]);
+        }
+
+        updateTimeouts.current[productId] = setTimeout(async () => {
+            try {
+                // Strategy: Remove then Add (Set Quantity) logic to be robust against increments
                 await api.removeFromCart(productId);
                 await api.addToCart(productId, newQuantity);
+                // Sync
+                loadCart(true);
+            } catch (error) {
+                console.log("Update Quantity Failed", error);
+                // In debounce, reverting is hard because state might have changed again.
+                // Best to just silent reload.
+                loadCart(true);
             }
-            await loadCart();
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
+        }, 500);
     };
 
     const clearCart = async () => {
         if (!(await requireAuth())) return;
+        setCart([]); // Optimistic
         try {
-            setLoading(true);
-            for (const item of cart) {
-                await api.removeFromCart(item.id);
+            // setLoading(true); // Maybe keep loading here as it's a big action
+            // Actually, background is fine.
+            const data = await api.getCart(); // Get fresh list to be sure what to delete? 
+            // Better: loop existing cart
+            // But if optimistic clear happened, 'cart' is empty.
+            // We should use 'cart' from closure or just rely on IDs we know?
+            // Safer:
+            const currentItems = await api.getCart(); // Fetch real Items
+            if (currentItems?.items) {
+                for (const item of currentItems.items) {
+                    await api.removeFromCart(item.product._id);
+                }
             }
-            await loadCart();
-        } finally {
-            setLoading(false);
+            loadCart(true);
+        } catch (error) {
+            loadCart(true); // Re-fetch if failed
         }
     };
 
@@ -186,7 +251,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         loadCart();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only load cart once on mount
+    }, []);
 
     return (
         <CartContext.Provider value={{

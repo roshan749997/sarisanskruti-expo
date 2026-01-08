@@ -13,11 +13,12 @@ export type RootStackParamList = {
   Search: undefined;
 
   // Checkout
-  Cart: undefined;
+  // Cart is now in MainTab
   Address: undefined;
   Payment: { payuData: any };
   OrderSuccess: { orderId: string };
   OrderFailure: undefined;
+  Wishlist: undefined; // Moved to Stack
 
   // Static
   // Static
@@ -28,7 +29,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Shop: undefined;
-  Wishlist: undefined;
+  Cart: undefined; // Moved to Tab
   Profile: undefined;
 };
 

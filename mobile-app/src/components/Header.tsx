@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -162,11 +161,9 @@ const Header = () => {
 
   const handleCategoryPress = (category: typeof categories[0]) => {
     if (activeCategory === category.name) {
-      // If already active, navigate to category page
       setActiveCategory(null);
       navigation.navigate(category.path, category.params);
     } else {
-      // Show subcategories
       setActiveCategory(category.name);
     }
   };
@@ -176,7 +173,10 @@ const Header = () => {
     navigation.navigate(subcategory.path, subcategory.params);
   };
 
-  const selectedCategory = categories.find((cat) => cat.name === activeCategory);
+  // Safe check if activeCategory is valid
+  const selectedCategory = activeCategory
+    ? categories.find((cat) => cat.name === activeCategory)
+    : null;
 
   return (
     <View style={styles.container}>
@@ -222,58 +222,54 @@ const Header = () => {
         animationType="slide"
         onRequestClose={() => setActiveCategory(null)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedCategory?.name}</Text>
-              <View style={styles.modalHeaderActions}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setActiveCategory(null);
-                    if (selectedCategory) {
-                      navigation.navigate(selectedCategory.path, selectedCategory.params);
-                    }
-                  }}
-                  style={styles.viewAllButton}
-                >
-                  <Text style={styles.viewAllText}>All {selectedCategory?.name}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setActiveCategory(null)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="close" size={24} color="#333" />
-                </TouchableOpacity>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalOverlay}
+            onPress={() => setActiveCategory(null)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{selectedCategory?.name}</Text>
+                <View style={styles.modalHeaderActions}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setActiveCategory(null);
+                      if (selectedCategory) {
+                        navigation.navigate(selectedCategory.path, selectedCategory.params);
+                      }
+                    }}
+                    style={styles.viewAllButton}
+                  >
+                    <Text style={styles.viewAllText}>All {selectedCategory?.name}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setActiveCategory(null)}
+                    style={styles.closeButton}
+                  >
+                    <Ionicons name="close" size={24} color="#333" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
 
-            <ScrollView style={styles.subcategoriesList}>
-              {/* All Category Link */}
-              <TouchableOpacity
-                style={styles.subcategoryItem}
-                onPress={() => {
-                  setActiveCategory(null);
-                  if (selectedCategory) {
-                    navigation.navigate(selectedCategory.path, selectedCategory.params);
-                  }
-                }}
-              >
-                <Text style={styles.subcategoryText}>All {selectedCategory?.name}</Text>
-              </TouchableOpacity>
-
-              {/* Subcategories */}
-              {selectedCategory?.subcategories.map((subcategory, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.subcategoryItem}
-                  onPress={() => handleSubcategoryPress(subcategory)}
-                >
-                  <Text style={styles.subcategoryText}>{subcategory.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
+              <ScrollView style={styles.subcategoriesList}>
+                {selectedCategory?.subcategories.map((subcategory, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.subcategoryItem}
+                    onPress={() => handleSubcategoryPress(subcategory)}
+                  >
+                    <Text style={styles.subcategoryText}>{subcategory.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </ScrollView>
       </Modal>
     </View>
   );
@@ -327,6 +323,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -334,6 +331,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     flex: 1,
+    // Max height handling is implicit with flex 1 in justify-end overlay? No, creates full screen modal from top 100.
+    height: '80%', // Limit height
   },
   modalHeader: {
     flexDirection: 'row',
@@ -383,6 +382,3 @@ const styles = StyleSheet.create({
 });
 
 export default Header;
-
-
-

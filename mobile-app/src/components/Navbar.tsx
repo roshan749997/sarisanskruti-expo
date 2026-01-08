@@ -10,6 +10,7 @@ import {
   Image,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
@@ -79,202 +80,197 @@ const Navbar = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.navBar}>
-        {/* Logo */}
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.logoContainer}>
-          <Image
-            source={{ uri: 'https://res.cloudinary.com/dvkxgrcbv/image/upload/w_1000,q_100/v1766831916/1_osqlws.png' }}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-
-        {/* Mobile Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            onFocus={() => {
-              if (searchQuery.trim().length >= 2) {
-                setShowSearchResults(true);
-              }
-            }}
-          />
-          <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-            <Ionicons name="search" size={18} color="#666" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Icons */}
-        <View style={styles.iconsContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Wishlist')}
-            style={styles.iconButton}
-          >
-            <Ionicons name="heart-outline" size={22} color="#333" />
-            {wishlistCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{wishlistCount > 9 ? '9+' : wishlistCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Cart')}
-            style={styles.iconButton}
-          >
-            <Ionicons name="bag-outline" size={22} color="#333" />
-            {cartCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{cartCount > 9 ? '9+' : cartCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Menu Button */}
-          <TouchableOpacity
-            onPress={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            style={styles.menuButton}
-          >
-            <Ionicons
-              name={isMobileMenuOpen ? 'close' : 'menu'}
-              size={24}
-              color="#333"
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <View style={styles.navBar}>
+          {/* Logo */}
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.logoContainer}>
+            <Image
+              source={{ uri: 'https://res.cloudinary.com/dvkxgrcbv/image/upload/w_2000,q_100/v1766831916/1_osqlws.png' }}
+              style={styles.logo}
+              resizeMode="cover"
             />
           </TouchableOpacity>
+
+          {/* Icons */}
+          <View style={styles.iconsContainer}>
+            {/* Search Icon */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Search', { query: '' })}
+              style={styles.iconButton}
+            >
+              <Ionicons name="search-outline" size={22} color="#333" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Wishlist')}
+              style={styles.iconButton}
+            >
+              <Ionicons name="heart-outline" size={22} color="#333" />
+              {wishlistCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{wishlistCount > 9 ? '9+' : wishlistCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Cart')}
+              style={styles.iconButton}
+            >
+              <Ionicons name="bag-outline" size={22} color="#333" />
+              {cartCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{cartCount > 9 ? '9+' : cartCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Menu Button */}
+            <TouchableOpacity
+              onPress={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={styles.menuButton}
+            >
+              <Ionicons
+                name={isMobileMenuOpen ? 'close' : 'menu'}
+                size={24}
+                color="#333"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Search Results Dropdown */}
-      {showSearchResults && (
-        <View style={styles.searchResultsContainer}>
-          {searchLoading && (
-            <View style={styles.searchResultItem}>
-              <Text style={styles.searchResultText}>Searching…</Text>
-            </View>
-          )}
-          {!searchLoading && searchQuery.trim() && searchResults.length === 0 && (
-            <View style={styles.searchResultItem}>
-              <Text style={styles.searchResultText}>No products found</Text>
-            </View>
-          )}
-          {!searchLoading && searchResults.length > 0 && (
-            <ScrollView style={styles.searchResultsList} nestedScrollEnabled>
-              {searchResults.slice(0, 8).map((p) => (
-                <TouchableOpacity
-                  key={p._id || p.id}
-                  style={styles.searchResultItem}
-                  onPress={() => {
-                    setShowSearchResults(false);
-                    navigation.navigate('ProductDetail', { id: p._id || p.id });
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri: p.images?.image1 || p.image || 'https://via.placeholder.com/60x80?text=No+Image',
-                    }}
-                    style={styles.searchResultImage}
-                  />
-                  <View style={styles.searchResultInfo}>
-                    <Text style={styles.searchResultTitle} numberOfLines={1}>
-                      {p.title || p.name || 'Product'}
-                    </Text>
-                    {p.price && (
-                      <Text style={styles.searchResultPrice}>
-                        ₹{Number(p.price).toLocaleString('en-IN')}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-      )}
-
-      {/* Mobile Menu Modal */}
-      <Modal
-        visible={isMobileMenuOpen}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsMobileMenuOpen(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Menu</Text>
-              <TouchableOpacity
-                onPress={() => setIsMobileMenuOpen(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.menuContent}>
-              {navLinks.map((link) => (
-                <TouchableOpacity
-                  key={link.name}
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setIsMobileMenuOpen(false);
-                    if (link.params) {
-                      navigation.navigate(link.path, link.params);
-                    } else {
-                      navigation.navigate(link.path);
-                    }
-                  }}
-                >
-                  <Text style={styles.menuItemText}>{link.name}</Text>
-                </TouchableOpacity>
-              ))}
-
-              <View style={styles.menuDivider} />
-
-              {token ? (
-                <>
+        {/* Search Results Dropdown */}
+        {showSearchResults && (
+          <View style={styles.searchResultsContainer}>
+            {searchLoading && (
+              <View style={styles.searchResultItem}>
+                <Text style={styles.searchResultText}>Searching…</Text>
+              </View>
+            )}
+            {!searchLoading && searchQuery.trim() && searchResults.length === 0 && (
+              <View style={styles.searchResultItem}>
+                <Text style={styles.searchResultText}>No products found</Text>
+              </View>
+            )}
+            {!searchLoading && searchResults.length > 0 && (
+              <ScrollView style={styles.searchResultsList} nestedScrollEnabled>
+                {searchResults.slice(0, 8).map((p) => (
                   <TouchableOpacity
+                    key={p._id || p.id}
+                    style={styles.searchResultItem}
+                    onPress={() => {
+                      setShowSearchResults(false);
+                      navigation.navigate('ProductDetail', { id: p._id || p.id });
+                    }}
+                  >
+                    <Image
+                      source={{
+                        uri: p.images?.image1 || p.image || 'https://via.placeholder.com/60x80?text=No+Image',
+                      }}
+                      style={styles.searchResultImage}
+                    />
+                    <View style={styles.searchResultInfo}>
+                      <Text style={styles.searchResultTitle} numberOfLines={1}>
+                        {p.title || p.name || 'Product'}
+                      </Text>
+                      {p.price && (
+                        <Text style={styles.searchResultPrice}>
+                          ₹{Number(p.price).toLocaleString('en-IN')}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
+
+        {/* Mobile Menu Modal */}
+        <Modal
+          visible={isMobileMenuOpen}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setIsMobileMenuOpen(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Menu</Text>
+                <TouchableOpacity
+                  onPress={() => setIsMobileMenuOpen(false)}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.menuContent}>
+                {navLinks.map((link) => (
+                  <TouchableOpacity
+                    key={link.name}
                     style={styles.menuItem}
                     onPress={() => {
                       setIsMobileMenuOpen(false);
-                      navigation.navigate('Profile');
+                      if (link.params) {
+                        navigation.navigate(link.path, link.params);
+                      } else {
+                        navigation.navigate(link.path);
+                      }
                     }}
                   >
-                    <Text style={styles.menuItemText}>PROFILE</Text>
+                    <Text style={styles.menuItemText}>{link.name}</Text>
                   </TouchableOpacity>
+                ))}
+
+                <View style={styles.menuDivider} />
+
+                {token ? (
+                  <>
+                    <TouchableOpacity
+                      style={styles.menuItem}
+                      onPress={() => {
+                        setIsMobileMenuOpen(false);
+                        navigation.navigate('Profile');
+                      }}
+                    >
+                      <Text style={styles.menuItemText}>PROFILE</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.menuItem, styles.logoutButton]}
+                      onPress={handleLogout}
+                    >
+                      <Ionicons name="log-out-outline" size={20} color="#fff" />
+                      <Text style={[styles.menuItemText, styles.logoutText]}>LOGOUT</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
                   <TouchableOpacity
-                    style={[styles.menuItem, styles.logoutButton]}
-                    onPress={handleLogout}
+                    style={[styles.menuItem, styles.loginButton]}
+                    onPress={() => {
+                      setIsMobileMenuOpen(false);
+                      navigation.navigate('Login');
+                    }}
                   >
-                    <Ionicons name="log-out-outline" size={20} color="#fff" />
-                    <Text style={[styles.menuItemText, styles.logoutText]}>LOGOUT</Text>
+                    <Ionicons name="log-in-outline" size={20} color="#fff" />
+                    <Text style={[styles.menuItemText, styles.loginText]}>SIGN IN</Text>
                   </TouchableOpacity>
-                </>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.menuItem, styles.loginButton]}
-                  onPress={() => {
-                    setIsMobileMenuOpen(false);
-                    navigation.navigate('Login');
-                  }}
-                >
-                  <Ionicons name="log-in-outline" size={20} color="#fff" />
-                  <Text style={[styles.menuItemText, styles.loginText]}>SIGN IN</Text>
-                </TouchableOpacity>
-              )}
-            </ScrollView>
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: '#CCC7BF',
+    zIndex: 70,
+  },
   container: {
     backgroundColor: '#CCC7BF',
     zIndex: 70,
@@ -290,8 +286,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   logo: {
-    height: 50,
-    width: 120,
+    height: 60,
+    width: 150,
   },
   searchContainer: {
     flex: 1,

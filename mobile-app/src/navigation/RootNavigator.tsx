@@ -1,8 +1,11 @@
 import React from 'react';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, MainTabParamList } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -29,6 +32,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabs = () => {
+    const insets = useSafeAreaInsets();
+    const { cart } = useCart();
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -37,17 +43,29 @@ const MainTabs = () => {
                     let iconName: any;
                     if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
                     else if (route.name === 'Shop') iconName = focused ? 'grid' : 'grid-outline';
-                    else if (route.name === 'Wishlist') iconName = focused ? 'heart' : 'heart-outline';
+                    else if (route.name === 'Cart') iconName = focused ? 'cart' : 'cart-outline';
                     else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#D4AF37', // Gold-ish for Saree Sanskruti
                 tabBarInactiveTintColor: 'gray',
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                    borderTopWidth: 1,
+                    borderTopColor: '#e5e5e5',
+                    paddingBottom: Math.max(insets.bottom, 10),
+                    paddingTop: 8,
+                    height: 60 + Math.max(insets.bottom, 10),
+                },
             })}
         >
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Shop" component={ShopScreen} />
-            <Tab.Screen name="Wishlist" component={WishlistScreen} />
+            <Tab.Screen
+                name="Cart"
+                component={CartScreen}
+                options={{ tabBarBadge: cart.length > 0 ? cart.length : undefined }}
+            />
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
     );
@@ -76,7 +94,7 @@ const RootNavigator = () => {
             <Stack.Screen name="Search" component={SearchScreen} />
 
             {/* Checkout Flow */}
-            <Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="Wishlist" component={WishlistScreen} />
             <Stack.Screen name="Address" component={AddressScreen} />
             <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen as any} />

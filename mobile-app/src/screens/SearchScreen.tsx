@@ -8,14 +8,15 @@ import {
     TouchableOpacity,
     Image,
     ActivityIndicator,
-    Dimensions
+    Dimensions,
+    Keyboard
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../services/api';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
-const ITEM_WIDTH = (width - 40) / 2;
 
 const SearchScreen = () => {
     const navigation = useNavigation<any>();
@@ -27,9 +28,9 @@ const SearchScreen = () => {
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (query.length > 2) {
+            if (query.trim().length > 2) {
                 performSearch(query);
-            } else if (query.length === 0) {
+            } else if (query.trim().length === 0) {
                 setResults([]);
                 setHasSearched(false);
             }
@@ -42,7 +43,9 @@ const SearchScreen = () => {
         setLoading(true);
         try {
             const data = await api.searchProducts(text);
-            setResults(Array.isArray(data) ? data : []);
+            // Robust data handling to support Array or Object response
+            const products = Array.isArray(data) ? data : (data?.results || data?.products || []);
+            setResults(products);
             setHasSearched(true);
         } catch (e) {
             console.error(e);
@@ -52,38 +55,56 @@ const SearchScreen = () => {
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
-        >
-            <Image
-                source={{ uri: item.images?.image1 }}
-                style={styles.image}
-                resizeMode="cover"
-            />
-            <View style={styles.details}>
-                <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-                <Text style={styles.price}>₹{item.price}</Text>
-            </View>
-        </TouchableOpacity>
-    );
+    const renderItem = ({ item }: { item: any }) => {
+        const price = item.price || item.mrp || 0;
+        const discount = item.discountPercent || 0;
+
+        return (
+            <TouchableOpacity
+                style={styles.card}
+                onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
+            >
+                <View style={styles.imageContainer}>
+                    <Image
+                        source={{ uri: item.images?.image1 || 'https://via.placeholder.com/300' }}
+                        style={styles.image}
+                        resizeMode="cover"
+                    />
+                    {discount > 0 && (
+                        <View style={styles.discountBadge}>
+                            <Text style={styles.discountText}>-{discount}%</Text>
+                        </View>
+                    )}
+                </View>
+                <View style={styles.details}>
+                    <Text style={styles.brand} numberOfLines={1}>{item.product_info?.brand || 'Sarisanskruti'}</Text>
+                    <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.price}>₹{price.toLocaleString()}</Text>
+                        {item.mrp > price && <Text style={styles.mrp}>₹{item.mrp.toLocaleString()}</Text>}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#000" />
+                    <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
                 <View style={styles.searchBar}>
-                    <Ionicons name="search" size={20} color="#666" style={{ marginRight: 8 }} />
+                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
                     <TextInput
                         style={styles.input}
                         placeholder="Search for sarees, kurtis..."
+                        placeholderTextColor="#999"
                         value={query}
                         onChangeText={setQuery}
                         autoFocus
                         returnKeyType="search"
+                        onSubmitEditing={() => performSearch(query)}
                     />
                     {query.length > 0 && (
                         <TouchableOpacity onPress={() => { setQuery(''); setResults([]); }}>
@@ -95,7 +116,7 @@ const SearchScreen = () => {
 
             {loading ? (
                 <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#000" />
+                    <ActivityIndicator size="large" color="#E91E63" />
                 </View>
             ) : (
                 <FlatList
@@ -103,21 +124,34 @@ const SearchScreen = () => {
                     renderItem={renderItem}
                     keyExtractor={(item) => item._id}
                     numColumns={2}
-                    contentContainerStyle={styles.list}
+                    columnWrapperStyle={styles.row}
+                    contentContainerStyle={styles.listContent}
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={
-                        hasSearched ? (
+                        hasSearched && query.length > 2 ? (
                             <View style={styles.center}>
-                                <Text style={styles.emptyText}>No results found for "{query}"</Text>
+                                <Image
+                                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/6134/6134065.png' }}
+                                    style={{ width: 100, height: 100, marginBottom: 20, opacity: 0.5 }}
+                                    resizeMode="contain"
+                                />
+                                <Text style={styles.noResults}>No products found for "{query}"</Text>
+                                <Text style={styles.subText}>Try checking your spelling or use different keywords</Text>
                             </View>
                         ) : (
                             <View style={styles.center}>
-                                <Text style={styles.introText}>Type at least 3 characters to search</Text>
+                                {!hasSearched && (
+                                    <View style={{ alignItems: 'center' }}>
+                                        <Ionicons name="search-outline" size={64} color="#ddd" />
+                                        <Text style={[styles.subText, { marginTop: 10 }]}>Type to search products</Text>
+                                    </View>
+                                )}
                             </View>
                         )
                     }
                 />
             )}
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -129,15 +163,15 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 50,
-        paddingBottom: 10,
-        paddingHorizontal: 15,
-        backgroundColor: '#fff',
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+        paddingTop: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: '#f0f0f0',
     },
     backBtn: {
-        marginRight: 10,
+        marginRight: 12,
+        padding: 4,
     },
     searchBar: {
         flex: 1,
@@ -145,62 +179,105 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f5f5f5',
         borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
+        paddingHorizontal: 12,
+        height: 44,
+    },
+    searchIcon: {
+        marginRight: 8,
     },
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#000',
+        color: '#333',
+        height: '100%',
     },
-    list: {
+    listContent: {
+        padding: 12,
+    },
+    row: {
+        justifyContent: 'space-between',
+    },
+    card: {
+        width: '48%',
+        backgroundColor: '#fff',
+        marginBottom: 16,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#eee',
+        overflow: 'hidden',
+    },
+    imageContainer: {
+        width: '100%',
+        aspectRatio: 0.75,
+        backgroundColor: '#f9f9f9',
+        position: 'relative',
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+    discountBadge: {
+        position: 'absolute',
+        top: 6,
+        left: 6,
+        backgroundColor: '#E91E63',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    discountText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    details: {
         padding: 10,
+    },
+    brand: {
+        fontSize: 10,
+        color: '#888',
+        fontWeight: '600',
+        marginBottom: 2,
+        textTransform: 'uppercase',
+    },
+    title: {
+        fontSize: 13,
+        color: '#333',
+        marginBottom: 4,
+        minHeight: 36, // Ensure alignment
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+    },
+    price: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#212121',
+        marginRight: 6,
+    },
+    mrp: {
+        fontSize: 11,
+        color: '#999',
+        textDecorationLine: 'line-through',
     },
     center: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 50,
+        paddingTop: 50,
     },
-    emptyText: {
+    noResults: {
         fontSize: 16,
-        color: '#666',
-    },
-    introText: {
-        fontSize: 16,
-        color: '#999',
-    },
-    card: {
-        width: ITEM_WIDTH,
-        marginBottom: 20,
-        marginHorizontal: 5,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    image: {
-        width: '100%',
-        height: ITEM_WIDTH * 1.3,
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-    },
-    details: {
-        padding: 10,
-    },
-    title: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: '#333',
-        marginBottom: 5,
-        height: 34,
-    },
-    price: {
-        fontSize: 14,
         fontWeight: 'bold',
-        color: '#000',
+        color: '#333',
+        marginBottom: 8,
+    },
+    subText: {
+        fontSize: 14,
+        color: '#888',
+        textAlign: 'center',
+        paddingHorizontal: 40,
     },
 });
 

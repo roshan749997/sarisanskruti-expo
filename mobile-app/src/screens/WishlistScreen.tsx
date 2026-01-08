@@ -11,6 +11,7 @@ import {
 import { useWishlist } from '../context/WishlistContext';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const COLUMN_count = 2;
@@ -68,8 +69,11 @@ const WishlistScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5, marginRight: 10 }}>
+                    <Ionicons name="arrow-back" size={24} color="#333" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>My Wishlist ({wishlist.length})</Text>
             </View>
             <FlatList
@@ -79,7 +83,7 @@ const WishlistScreen = () => {
                 numColumns={COLUMN_count}
                 contentContainerStyle={styles.list}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -98,7 +102,8 @@ const styles = StyleSheet.create({
         padding: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        marginTop: 40,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     headerTitle: {
         fontSize: 20,
@@ -106,6 +111,7 @@ const styles = StyleSheet.create({
     },
     list: {
         padding: 10,
+        paddingBottom: 20,
     },
     card: {
         width: ITEM_WIDTH,

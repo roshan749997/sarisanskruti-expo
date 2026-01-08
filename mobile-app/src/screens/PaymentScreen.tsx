@@ -59,8 +59,7 @@ const PaymentScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <WebView
         source={{ html: formHtml }} // Use baseUrl for assets if needed
         onNavigationStateChange={handleNavigationStateChange}
@@ -77,7 +76,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   loading: {
     ...StyleSheet.absoluteFillObject,

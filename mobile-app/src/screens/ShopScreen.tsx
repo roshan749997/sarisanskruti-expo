@@ -1,78 +1,212 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
+    FlatList,
     TouchableOpacity,
     Image,
     Dimensions,
-    SafeAreaView,
+    ScrollView,
     StatusBar,
-    Platform
+    Animated,
+    NativeScrollEvent,
+    NativeSyntheticEvent
 } from 'react-native';
-import { SafeAreaView as SafeArea } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
-const CATEGORY_WIDTH = (width - 45) / 2; // 2 cols with padding
+const SPACING = 12;
+const COL_NUM = 2;
+const ITEM_WIDTH = (width - SPACING * (COL_NUM + 1)) / COL_NUM;
 
 const ShopScreen = () => {
     const navigation = useNavigation<any>();
+    const scrollX = useRef(new Animated.Value(0)).current;
 
-    // Categories matching ShopByCategory.jsx
-    const categories = [
-        { name: 'COLLECTION', path: 'ProductList', params: { category: 'Collection' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156521/faaed640-0829-4861-80a2-6c7dc3e73bf3.png' },
-        { name: 'MEN', path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png' },
-        { name: 'WOMEN', path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png' },
-        { name: 'BOYS', path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png' },
-        { name: 'GIRLS', path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png' },
-        { name: 'SISHU', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png' },
-        { name: 'REGIONAL', path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png' },
-        { name: 'BANARASI', path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png' },
-        { name: 'DESIGNER', path: 'ProductList', params: { category: 'designer-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg' },
-        { name: 'PRINTED', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png' },
+    // Split categories for better layout
+    const topCategories = [
+        { name: 'Men', path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', highlight: true },
+        { name: 'Women', path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', highlight: true },
+        { name: 'Boys', path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png' },
+        { name: 'Girls', path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png' },
+        { name: 'Sishu', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png' },
+    ];
+
+    const collections = [
+        { name: 'All Collection', path: 'ProductList', params: { category: 'Collection' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156521/faaed640-0829-4861-80a2-6c7dc3e73bf3.png', desc: 'Explore All' },
+        { name: 'Men', path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', desc: 'Ethnic Wear', badge: 'NEW' },
+        { name: 'Women', path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', desc: 'Latest Trends', badge: 'HOT' },
+        { name: 'Boys', path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png', desc: 'Kids Fashion' },
+        { name: 'Girls', path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png', desc: 'Kids Fashion' },
+        { name: 'Sishu', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png', desc: 'Toddlers' },
+        { name: 'Silk Sarees', path: 'ProductList', params: { category: 'silk' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Pure Elegance', badge: 'CLASSIC' },
+        { name: 'Cotton Sarees', path: 'ProductList', params: { category: 'cotton' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Comfort Wrap', badge: 'SUMMER' },
+        { name: 'Regional Sarees', path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Traditional', badge: 'BESTSELLER' },
+        { name: 'Banarasi Silk', path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Premium Silk', badge: 'PREMIUM' },
+        { name: 'Designer Sarees', path: 'ProductList', params: { category: 'designer-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg', desc: 'Exclusive' },
+        { name: 'Printed Sarees', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png', desc: 'Daily Wear', badge: 'SALE' },
+    ];
+
+    const banners = [
+        {
+            id: '1',
+            image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png',
+            tag: 'NEW ARRIVALS',
+            title: 'Wedding Collection',
+            btn: 'Shop Now',
+            path: 'ProductList',
+            params: { category: 'banarasi' }
+        },
+        {
+            id: '2',
+            image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg',
+            tag: 'SALE LIVE',
+            title: 'Designer Sarees',
+            btn: 'View Offers',
+            path: 'ProductList',
+            params: { category: 'designer-sarees' }
+        }
     ];
 
     const Header = () => (
-        <View style={styles.headerContainer}>
-            <View style={styles.headerContent}>
-                <Text style={styles.headerTitle}>Shop By Category</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-                    <Ionicons name="search" size={24} color="#333" />
+        <View style={styles.header}>
+            <TouchableOpacity style={styles.searchBar} onPress={() => navigation.navigate('Search')}>
+                <Ionicons name="search" size={20} color="#878787" style={{ marginRight: 10 }} />
+                <Text style={styles.searchText}>Search for products...</Text>
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity style={styles.iconBtn}>
+                    <Ionicons name="mic-outline" size={20} color="#666" />
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn}>
+                    <Ionicons name="camera-outline" size={20} color="#666" />
+                </TouchableOpacity>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const TopCategories = () => (
+        <View style={styles.topCatContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topCatContent}>
+                {topCategories.map((item, index) => (
+                    <TouchableOpacity
+                        key={index}
+                        style={styles.circleItem}
+                        onPress={() => navigation.navigate(item.path, item.params)}
+                    >
+                        <View style={[styles.circleImageContainer, item.highlight && styles.circleHighlight]}>
+                            <Image source={{ uri: item.image }} style={styles.circleImage} />
+                            {item.highlight && <View style={styles.liveDot} />}
+                        </View>
+                        <Text style={styles.circleText}>{item.name}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+        </View>
+    );
+
+    const BannerCarousel = () => (
+        <View>
+            <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.carousel}
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
+                scrollEventThrottle={16}
+            >
+                {banners.map((item) => (
+                    <TouchableOpacity
+                        key={item.id}
+                        style={styles.bannerContainer}
+                        onPress={() => navigation.navigate(item.path, item.params)}
+                        activeOpacity={0.9}
+                    >
+                        <Image source={{ uri: item.image }} style={styles.bannerImage} resizeMode="cover" />
+                        <View style={styles.bannerOverlay}>
+                            <View style={styles.bannerTagContainer}>
+                                <Text style={styles.bannerTag}>{item.tag}</Text>
+                            </View>
+                            <Text style={styles.bannerTitle}>{item.title}</Text>
+                            <View style={styles.bannerBtnContainer}>
+                                <Text style={styles.bannerBtn}>{item.btn}</Text>
+                                <Ionicons name="arrow-forward" size={14} color="#fff" />
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+            {/* Dots */}
+            <View style={styles.dotsContainer}>
+                {banners.map((_, i) => {
+                    const opacity = scrollX.interpolate({
+                        inputRange: [(i - 1) * width, i * width, (i + 1) * width],
+                        outputRange: [0.3, 1, 0.3],
+                        extrapolate: 'clamp'
+                    });
+                    return <Animated.View key={i} style={[styles.dot, { opacity }]} />;
+                })}
             </View>
         </View>
     );
 
+    const getBadgeColor = (type?: string) => {
+        switch (type) {
+            case 'NEW': return '#4CAF50';
+            case 'HOT': return '#E53935';
+            case 'SALE': return '#FF9800';
+            case 'PREMIUM': return '#212121';
+            case 'BESTSELLER': return '#1976D2';
+            default: return '#212121';
+        }
+    };
+
+    const renderGridItem = ({ item }: { item: any }) => (
+        <TouchableOpacity
+            style={styles.gridCard}
+            onPress={() => navigation.navigate(item.path, item.params)}
+            activeOpacity={0.9}
+        >
+            <View style={styles.gridImageContainer}>
+                <Image source={{ uri: item.image }} style={styles.gridImage} resizeMode="cover" />
+                {item.badge && (
+                    <View style={[styles.badge, { backgroundColor: getBadgeColor(item.badge) }]}>
+                        <Text style={styles.badgeText}>{item.badge}</Text>
+                    </View>
+                )}
+            </View>
+            <View style={styles.gridInfo}>
+                <Text style={styles.gridTitle} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.gridDesc}>{item.desc}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
-        <SafeArea style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
             <Header />
-            <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-                <View style={styles.introSection}>
-                    <Text style={styles.introText}>Explore our wide range of collections</Text>
-                </View>
-
-                <View style={styles.grid}>
-                    {categories.map((cat, index) => (
-                        <TouchableOpacity
-                            key={index}
-                            style={styles.card}
-                            onPress={() => navigation.navigate(cat.path, cat.params)}
-                        >
-                            <Image source={{ uri: cat.image }} style={styles.image} resizeMode="cover" />
-                            <View style={styles.overlay}>
-                                <Text style={styles.cardTitle}>{cat.name}</Text>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                <View style={{ height: 80 }} />
-            </ScrollView>
-        </SafeArea>
+            <FlatList
+                data={collections}
+                renderItem={renderGridItem}
+                keyExtractor={(item, index) => index.toString()}
+                numColumns={COL_NUM}
+                columnWrapperStyle={styles.gridRow}
+                contentContainerStyle={styles.listContent}
+                ListHeaderComponent={() => (
+                    <View>
+                        <TopCategories />
+                        <BannerCarousel />
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Curated Collections</Text>
+                            <MaterialCommunityIcons name="sort-variant" size={20} color="#666" />
+                        </View>
+                    </View>
+                )}
+                showsVerticalScrollIndicator={false}
+            />
+        </SafeAreaView>
     );
 };
 
@@ -80,80 +214,229 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    headerContainer: {
+    header: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
     },
-    headerContent: {
+    searchBar: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 }
     },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        fontFamily: Platform.OS === 'ios' ? 'serif' : 'Roboto',
+    searchText: {
+        color: '#878787',
+        fontSize: 14,
     },
-    introSection: {
-        padding: 20,
+    iconBtn: {
+        padding: 4,
+    },
+    // Top Circles
+    topCatContainer: {
+        paddingVertical: 16,
+        borderBottomWidth: 8, // Splitter
+        borderBottomColor: '#f5f5f5',
+    },
+    topCatContent: {
+        paddingHorizontal: 12,
+    },
+    circleItem: {
         alignItems: 'center',
+        marginHorizontal: 8,
+        width: 70,
     },
-    introText: {
-        fontSize: 16,
-        color: '#666',
-        fontWeight: '300',
+    circleImageContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        borderWidth: 2,
+        borderColor: '#fff', // default
+        padding: 2,
+        marginBottom: 6,
+        elevation: 2,
+        backgroundColor: '#fff'
     },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        padding: 15,
-        justifyContent: 'space-between',
+    circleHighlight: {
+        borderColor: '#E91E63', // Highlight color (Pink/Red like Insta)
     },
-    card: {
-        width: CATEGORY_WIDTH,
-        height: CATEGORY_WIDTH * 1.3, // Portrait aspect
-        marginBottom: 15,
+    liveDot: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        backgroundColor: '#E91E63',
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    circleImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 32,
+    },
+    circleText: {
+        fontSize: 11,
+        color: '#333',
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    // Banner Carousel
+    carousel: {
+        marginTop: 16,
+    },
+    bannerContainer: {
+        width: width - 32,
+        marginHorizontal: 16,
+        height: 200,
         borderRadius: 12,
         overflow: 'hidden',
         backgroundColor: '#f0f0f0',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        position: 'relative',
     },
-    image: {
+    bannerImage: {
         width: '100%',
         height: '100%',
     },
-    overlay: {
+    bannerOverlay: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-        alignItems: 'center',
+        top: 0,
+        backgroundColor: 'rgba(0,0,0,0.25)',
+        justifyContent: 'flex-end',
+        padding: 20,
     },
-    cardTitle: {
+    bannerTagContainer: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#E91E63',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginBottom: 8,
+    },
+    bannerTag: {
         color: '#fff',
-        fontWeight: '700',
-        fontSize: 14,
-        textAlign: 'center',
-        textTransform: 'uppercase',
+        fontSize: 10,
+        fontWeight: 'bold',
         letterSpacing: 1,
+    },
+    bannerTitle: {
+        color: '#fff',
+        fontSize: 26,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
+    bannerBtnContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        alignSelf: 'flex-start',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+    },
+    bannerBtn: {
+        color: '#212121',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginRight: 4,
+    },
+    dotsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#212121',
+        marginHorizontal: 4,
+    },
+    // Grid
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginTop: 10,
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#212121',
+    },
+    listContent: {
+        paddingBottom: 80,
+    },
+    gridRow: {
+        paddingHorizontal: SPACING,
+        marginBottom: SPACING,
+        justifyContent: 'space-between'
+    },
+    gridCard: {
+        width: ITEM_WIDTH,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#f0f0f0',
+        elevation: 2,
+    },
+    gridImageContainer: {
+        width: '100%',
+        height: ITEM_WIDTH * 1.2, // Taller image
+        backgroundColor: '#f9f9f9',
+    },
+    gridImage: {
+        width: '100%',
+        height: '100%',
+    },
+    badge: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 4,
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    gridInfo: {
+        padding: 12,
+    },
+    gridTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#212121',
+        marginBottom: 4,
+    },
+    gridDesc: {
+        fontSize: 11,
+        color: '#878787',
     },
 });
 

@@ -23,8 +23,7 @@ const OrderFailureScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <View style={styles.content}>
                 <Animated.View style={[styles.iconContainer, { transform: [{ translateX: shakeAnimation }] }]}>
                     <View style={styles.circle}>
@@ -53,7 +52,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     content: {
         flex: 1,

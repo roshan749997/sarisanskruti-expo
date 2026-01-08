@@ -14,6 +14,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ForgotPasswordScreen = () => {
     const navigation = useNavigation<any>();
@@ -40,61 +41,65 @@ const ForgotPasswordScreen = () => {
 
     if (success) {
         return (
-            <View style={styles.container}>
-                <View style={styles.center}>
-                    <Ionicons name="checkmark-circle-outline" size={80} color="green" />
-                    <Text style={styles.successTitle}>Check your email</Text>
-                    <Text style={styles.successText}>We have sent a password reset link to {email}</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
-                        <Text style={styles.buttonText}>Back to Login</Text>
-                    </TouchableOpacity>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+                <View style={styles.container}>
+                    <View style={styles.center}>
+                        <Ionicons name="checkmark-circle-outline" size={80} color="green" />
+                        <Text style={styles.successTitle}>Check your email</Text>
+                        <Text style={styles.successText}>We have sent a password reset link to {email}</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
+                            <Text style={styles.buttonText}>Back to Login</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            </SafeAreaView>
         );
     }
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={{ flex: 1 }}
-        >
-            <ScrollView contentContainerStyle={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color="#000" />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.content}>
-                    <Text style={styles.title}>Forgot Password?</Text>
-                    <Text style={styles.subtitle}>Don't worry! It happens. Please enter the email associated with your account.</Text>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Email Address</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter your email"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={{ flex: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                            <Ionicons name="arrow-back" size={24} color="#000" />
+                        </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity
-                        style={[styles.button, loading && styles.disabled]}
-                        onPress={handleSubmit}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={styles.buttonText}>Send Reset Link</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+                    <View style={styles.content}>
+                        <Text style={styles.title}>Forgot Password?</Text>
+                        <Text style={styles.subtitle}>Don't worry! It happens. Please enter the email associated with your account.</Text>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Email Address</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter your email"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.button, loading && styles.disabled]}
+                            onPress={handleSubmit}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>Send Reset Link</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
@@ -105,7 +110,6 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     header: {
-        marginTop: 40,
         marginBottom: 20,
     },
     backBtn: {

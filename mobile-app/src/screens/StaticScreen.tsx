@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StaticScreen = () => {
     const route = useRoute<any>();
@@ -237,12 +238,12 @@ const StaticScreen = () => {
     );
 
     switch (type) {
-        case 'contact': return renderContact();
-        case 'terms': return renderTerms();
-        case 'privacy': return renderPrivacy();
-        case 'shipping': return renderShipping();
-        case 'returns': return renderReturns();
-        default: return renderAbout();
+        case 'contact': return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderContact()}</SafeAreaView>;
+        case 'terms': return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderTerms()}</SafeAreaView>;
+        case 'privacy': return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderPrivacy()}</SafeAreaView>;
+        case 'shipping': return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderShipping()}</SafeAreaView>;
+        case 'returns': return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderReturns()}</SafeAreaView>;
+        default: return <SafeAreaView style={styles.container} edges={['top', 'bottom']}>{renderAbout()}</SafeAreaView>;
     }
 };
 
@@ -252,8 +253,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     header: {
-        paddingTop: 50,
-        paddingBottom: 20,
+        paddingVertical: 20,
         paddingHorizontal: 20,
         backgroundColor: '#fff',
         borderBottomWidth: 1,

@@ -91,7 +91,7 @@ const handleApiError = (error: unknown): string => {
 
 export const api = {
   // Auth
-  login: async (email, password) => {
+  login: async (email: string, password: string) => {
     // Mock check specifically for testing flow if needed, but keeping real API primary
     if (email === 'test@example.com' && password === 'password123') {
       return {
@@ -103,7 +103,7 @@ export const api = {
     const res = await apiClient.post('/auth/signin', { email, password });
     return res.data;
   },
-  signup: async (name, email, password, phone) => {
+  signup: async (name: string, email: string, password: string, phone: string) => {
     const res = await apiClient.post('/auth/signup', { name, email, password, phone });
     return res.data;
   },
@@ -112,18 +112,18 @@ export const api = {
     return res.data;
   },
   sendOTP: async (payload: { phone: string; purpose: string; userData?: any }) => {
-    const res = await apiClient.post('/auth/send-otp', payload);
+    const res = await apiClient.post('/auth/otp/send', payload);
     return res.data;
   },
   verifyOTPSignin: async (payload: { phone: string; otp: string }) => {
-    const res = await apiClient.post('/auth/verify-otp-signin', payload);
+    const res = await apiClient.post('/auth/otp/verify/signin', payload);
     return res.data;
   },
   verifyOTPSignup: async (payload: { phone: string; otp: string }) => {
-    const res = await apiClient.post('/auth/verify-otp-signup', payload);
+    const res = await apiClient.post('/auth/otp/verify/signup', payload);
     return res.data;
   },
-  forgotPassword: async (email) => {
+  forgotPassword: async (email: string) => {
     const res = await apiClient.post('/auth/forgot-password', { email });
     return res.data;
   },
@@ -135,6 +135,17 @@ export const api = {
       return res.data;
     } catch {
       const res = await apiClient.get('/auth/me'); // Fallback
+      return res.data;
+    }
+  },
+  updateProfile: async (userData: any) => {
+    // Try standard endpoints
+    try {
+      const res = await apiClient.put('/me', userData);
+      return res.data;
+    } catch (e) {
+      // Fallback or just throw
+      const res = await apiClient.put('/auth/me', userData);
       return res.data;
     }
   },
