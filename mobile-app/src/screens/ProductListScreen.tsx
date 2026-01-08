@@ -19,6 +19,7 @@ import { api } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ const ProductListScreen = () => {
 
     const { addToCart, cartCount } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+    const { colors, darkMode } = useTheme();
 
     const [products, setProducts] = useState<any[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -162,7 +164,7 @@ const ProductListScreen = () => {
 
         return (
             <Pressable
-                style={styles.productCard}
+                style={[styles.productCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
             >
                 <View style={styles.imageContainer}>
@@ -170,6 +172,7 @@ const ProductListScreen = () => {
                         source={{ uri: item.images?.image1 || 'https://via.placeholder.com/300' }}
                         style={styles.productImage}
                         resizeMode="cover"
+                        defaultSource={require('../../assets/app_logo.png')}
                     />
                     {discount > 0 && (
                         <View style={styles.discountBadge}>
@@ -177,10 +180,10 @@ const ProductListScreen = () => {
                         </View>
                     )}
                     <TouchableOpacity
-                        style={styles.wishlistBtn}
+                        style={[styles.wishlistBtn, { backgroundColor: colors.card }]}
                         onPress={(e) => { e.stopPropagation(); handleWishlistToggle(item); }}
                     >
-                        <Ionicons name={isWishlisted ? "heart" : "heart-outline"} size={18} color={isWishlisted ? "#E91E63" : "#333"} />
+                        <Ionicons name={isWishlisted ? "heart" : "heart-outline"} size={18} color={isWishlisted ? "#E91E63" : colors.text} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -192,31 +195,31 @@ const ProductListScreen = () => {
                 </View>
 
                 <View style={styles.infoContainer}>
-                    <Text style={styles.brandText} numberOfLines={1}>{item.product_info?.brand || 'Sarisanskruti'}</Text>
-                    <Text style={styles.titleText} numberOfLines={1}>{item.title}</Text>
+                    <Text style={[styles.brandText, { color: colors.subText }]} numberOfLines={1}>{item.product_info?.brand || 'Sarisanskruti'}</Text>
+                    <Text style={[styles.titleText, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
                     <View style={styles.priceRow}>
-                        <Text style={styles.priceText}>₹{price.toLocaleString('en-IN')}</Text>
+                        <Text style={[styles.priceText, { color: colors.text }]}>₹{price.toLocaleString('en-IN')}</Text>
                         {mrp > price && <Text style={styles.mrpText}>₹{mrp}</Text>}
                     </View>
                 </View>
             </Pressable>
         );
-    }, [isInWishlist, addToCart]);
+    }, [isInWishlist, addToCart, colors]);
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>{title || category || 'Collections'}</Text>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>{title || category || 'Collections'}</Text>
                     <Text style={styles.headerSubtitle}>{filteredProducts.length} Items</Text>
                 </View>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={{ position: 'relative' }}>
-                    <Ionicons name="cart-outline" size={24} color="#333" />
+                    <Ionicons name="cart-outline" size={24} color={colors.text} />
                     {cartCount > 0 && (
                         <View style={styles.headerBadge}>
                             <Text style={styles.headerBadgeText}>{cartCount > 9 ? '9+' : cartCount}</Text>
@@ -226,16 +229,16 @@ const ProductListScreen = () => {
             </View>
 
             {/* Filter Sort Bar */}
-            <View style={styles.barContainer}>
+            <View style={[styles.barContainer, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity style={styles.barButton} onPress={() => setSortModalVisible(true)}>
-                    <MaterialIcons name="sort" size={20} color="#333" />
-                    <Text style={styles.barText}>Sort</Text>
+                    <MaterialIcons name="sort" size={20} color={colors.text} />
+                    <Text style={[styles.barText, { color: colors.text }]}>Sort</Text>
                     {sortOption !== 'relevant' && <View style={styles.activeDot} />}
                 </TouchableOpacity>
-                <View style={styles.barDivider} />
+                <View style={[styles.barDivider, { backgroundColor: colors.border }]} />
                 <TouchableOpacity style={styles.barButton} onPress={() => setFilterModalVisible(true)}>
-                    <Ionicons name="filter-outline" size={20} color="#333" />
-                    <Text style={styles.barText}>Filter</Text>
+                    <Ionicons name="filter-outline" size={20} color={colors.text} />
+                    <Text style={[styles.barText, { color: colors.text }]}>Filter</Text>
                     {(selectedPriceRanges.length > 0 || selectedFabrics.length > 0) && <View style={styles.activeDot} />}
                 </TouchableOpacity>
             </View>
@@ -269,11 +272,11 @@ const ProductListScreen = () => {
             {/* Sort Modal */}
             <Modal visible={sortModalVisible} transparent animationType="slide">
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSortModalVisible(false)}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Sort By</Text>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Sort By</Text>
                         {['relevant', 'lowToHigh', 'highToLow', 'new'].map(opt => (
-                            <TouchableOpacity key={opt} style={styles.sortOption} onPress={() => { setSortOption(opt); setSortModalVisible(false); }}>
-                                <Text style={[styles.sortText, sortOption === opt && styles.sortTextActive]}>
+                            <TouchableOpacity key={opt} style={[styles.sortOption, { borderBottomColor: colors.border }]} onPress={() => { setSortOption(opt); setSortModalVisible(false); }}>
+                                <Text style={[styles.sortText, sortOption === opt && styles.sortTextActive, { color: sortOption === opt ? '#E91E63' : colors.text }]}>
                                     {opt === 'relevant' ? 'Relevant' : opt === 'lowToHigh' ? 'Price: Low to High' : opt === 'highToLow' ? 'Price: High to Low' : 'Newest First'}
                                 </Text>
                                 {sortOption === opt && <Ionicons name="checkmark" size={20} color="#E91E63" />}
@@ -285,9 +288,9 @@ const ProductListScreen = () => {
 
             {/* Filter Modal */}
             <Modal visible={filterModalVisible} animationType="slide" presentationStyle="pageSheet">
-                <SafeAreaView style={styles.fullScreenModal}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Filters</Text>
+                <SafeAreaView style={[styles.fullScreenModal, { backgroundColor: colors.background }]}>
+                    <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Filters</Text>
                         <TouchableOpacity onPress={clearFilters}>
                             <Text style={styles.resetText}>Reset</Text>
                         </TouchableOpacity>

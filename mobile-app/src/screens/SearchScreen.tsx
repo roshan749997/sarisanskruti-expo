@@ -15,11 +15,13 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../services/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const SearchScreen = () => {
     const navigation = useNavigation<any>();
+    const { colors, darkMode } = useTheme();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -61,10 +63,10 @@ const SearchScreen = () => {
 
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
             >
-                <View style={styles.imageContainer}>
+                <View style={[styles.imageContainer, { backgroundColor: colors.background }]}>
                     <Image
                         source={{ uri: item.images?.image1 || 'https://via.placeholder.com/300' }}
                         style={styles.image}
@@ -78,28 +80,29 @@ const SearchScreen = () => {
                 </View>
                 <View style={styles.details}>
                     <Text style={styles.brand} numberOfLines={1}>{item.product_info?.brand || 'Sarisanskruti'}</Text>
-                    <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+                    <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{item.title}</Text>
                     <View style={styles.priceRow}>
-                        <Text style={styles.price}>₹{price.toLocaleString()}</Text>
+                        <Text style={[styles.price, { color: colors.text }]}>₹{price.toLocaleString()}</Text>
                         {item.mrp > price && <Text style={styles.mrp}>₹{item.mrp.toLocaleString()}</Text>}
                     </View>
                 </View>
             </TouchableOpacity>
         );
+
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <View style={styles.searchBar}>
-                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                <View style={[styles.searchBar, { backgroundColor: colors.card }]}>
+                    <Ionicons name="search" size={20} color={colors.subText} style={styles.searchIcon} />
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { color: colors.text }]}
                         placeholder="Search for sarees, kurtis..."
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.subText}
                         value={query}
                         onChangeText={setQuery}
                         autoFocus
@@ -108,7 +111,7 @@ const SearchScreen = () => {
                     />
                     {query.length > 0 && (
                         <TouchableOpacity onPress={() => { setQuery(''); setResults([]); }}>
-                            <Ionicons name="close-circle" size={18} color="#999" />
+                            <Ionicons name="close-circle" size={18} color={colors.subText} />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -135,15 +138,15 @@ const SearchScreen = () => {
                                     style={{ width: 100, height: 100, marginBottom: 20, opacity: 0.5 }}
                                     resizeMode="contain"
                                 />
-                                <Text style={styles.noResults}>No products found for "{query}"</Text>
-                                <Text style={styles.subText}>Try checking your spelling or use different keywords</Text>
+                                <Text style={[styles.noResults, { color: colors.text }]}>No products found for "{query}"</Text>
+                                <Text style={[styles.subText, { color: colors.subText }]}>Try checking your spelling or use different keywords</Text>
                             </View>
                         ) : (
                             <View style={styles.center}>
                                 {!hasSearched && (
                                     <View style={{ alignItems: 'center' }}>
-                                        <Ionicons name="search-outline" size={64} color="#ddd" />
-                                        <Text style={[styles.subText, { marginTop: 10 }]}>Type to search products</Text>
+                                        <Ionicons name="search-outline" size={64} color={colors.border} />
+                                        <Text style={[styles.subText, { marginTop: 10, color: colors.subText }]}>Type to search products</Text>
                                     </View>
                                 )}
                             </View>

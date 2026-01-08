@@ -26,6 +26,8 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -39,6 +41,7 @@ const AVATARS = [
 ];
 
 const OrderCard = ({ order }: { order: any }) => {
+    const { colors } = useTheme();
     const [expanded, setExpanded] = useState(false);
     const toggleExpand = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -50,7 +53,7 @@ const OrderCard = ({ order }: { order: any }) => {
     const previewImage = firstItem?.product?.images?.image1;
 
     return (
-        <TouchableOpacity activeOpacity={0.9} onPress={toggleExpand} style={styles.orderCard}>
+        <TouchableOpacity activeOpacity={0.9} onPress={toggleExpand} style={[styles.orderCard, { backgroundColor: colors.card }]}>
             <View style={styles.orderHeader}>
                 {previewImage ? (
                     <Image source={{ uri: previewImage }} style={styles.orderPreviewImg} />
@@ -65,7 +68,7 @@ const OrderCard = ({ order }: { order: any }) => {
                         <Text style={[styles.orderStatus, { color: getStatusColor(order.status).text }]}>
                             {order.status || 'Processing'}
                         </Text>
-                        <Text style={styles.orderAmount}>₹{order.amount}</Text>
+                        <Text style={[styles.orderAmount, { color: colors.text }]}>₹{order.amount}</Text>
                     </View>
                     <Text style={styles.orderDate}>Ordered on {new Date(order.createdAt).toDateString()}</Text>
                 </View>
@@ -81,19 +84,19 @@ const OrderCard = ({ order }: { order: any }) => {
                         <View key={idx} style={styles.itemRow}>
                             {item.product?.images?.image1 && <Image source={{ uri: item.product.images.image1 }} style={styles.itemSmallImg} />}
                             <View style={{ flex: 1, marginLeft: 10 }}>
-                                <Text style={styles.itemName} numberOfLines={2}>{item.product?.title}</Text>
-                                <Text style={styles.itemMeta}>Qty: {item.quantity}  •  ₹{item.price}</Text>
+                                <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={2}>{item.product?.title}</Text>
+                                <Text style={[styles.itemMeta, { color: colors.subText }]}>Qty: {item.quantity}  •  ₹{item.price}</Text>
                             </View>
                         </View>
                     ))}
 
                     <View style={styles.divider} />
                     <Text style={styles.expandedSectionTitle}>Delivery Details</Text>
-                    <Text style={styles.addressText}>
-                        <Ionicons name="location-outline" size={14} /> {order.address?.fullName}, {order.address?.city} - {order.address?.pincode}
+                    <Text style={[styles.addressText, { color: colors.subText }]}>
+                        <Ionicons name="location-outline" size={14} color={colors.subText} /> {order.address?.fullName}, {order.address?.city} - {order.address?.pincode}
                     </Text>
-                    <Text style={styles.paymentText}>
-                        <Ionicons name="card-outline" size={14} /> {order.paymentMethod || 'Online'}
+                    <Text style={[styles.paymentText, { color: colors.subText }]}>
+                        <Ionicons name="card-outline" size={14} color={colors.subText} /> {order.paymentMethod || 'Online'}
                     </Text>
                 </View>
             )}
@@ -135,9 +138,82 @@ const ProfileScreen = () => {
     const [editAvatar, setEditAvatar] = useState('');
     const [updating, setUpdating] = useState(false);
 
+    // Account Settings Modals
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+    const [securityModalVisible, setSecurityModalVisible] = useState(false);
+    const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
+    const [languageModalVisible, setLanguageModalVisible] = useState(false);
+
+    // Notification Settings
+    const [notifOrders, setNotifOrders] = useState(true);
+    const [notifOffers, setNotifOffers] = useState(true);
+    const [notifUpdates, setNotifUpdates] = useState(false);
+
+    // Language
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
+
+    // Theme
+    const { darkMode, toggleDarkMode, colors } = useTheme();
+
+    // Password Change
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
     useEffect(() => {
         if (route.params?.tab) setViewMode(route.params.tab === 'profile' ? 'menu' : route.params.tab);
     }, [route.params?.tab]);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const storedLang = await AsyncStorage.getItem('language');
+                if (storedLang) setSelectedLanguage(storedLang);
+            } catch (e) {
+                console.log('Error loading settings', e);
+            }
+        };
+        loadSettings();
+    }, []);
+
+    const handleUpdatePassword = async () => {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            Alert.alert('Error', 'Please fill all fields');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            Alert.alert('Error', 'New passwords do not match');
+            return;
+        }
+        if (newPassword.length < 6) {
+            Alert.alert('Error', 'Password must be at least 6 characters');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await api.changePassword({ currentPassword, newPassword });
+            setSecurityModalVisible(false);
+            Alert.alert('Success', 'Password updated successfully');
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to update password');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const applyLanguage = async () => {
+        try {
+            await AsyncStorage.setItem('language', selectedLanguage);
+            setLanguageModalVisible(false);
+            // Optionally reload app or context
+        } catch (e) {
+            console.log('Error saving language');
+        }
+    };
 
     useEffect(() => {
         if (isFocused) loadData();
@@ -200,33 +276,33 @@ const ProfileScreen = () => {
             <View style={[styles.quickIconCircle, { borderColor: color + '40', backgroundColor: color + '10' }]}>
                 <Ionicons name={icon} size={22} color={color} />
             </View>
-            <Text style={styles.quickLabel}>{label}</Text>
+            <Text style={[styles.quickLabel, { color: colors.text }]}>{label}</Text>
         </TouchableOpacity>
     );
 
     const MenuItem = ({ icon, label, onPress, color = '#2874F0' }: any) => (
-        <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+        <TouchableOpacity style={[styles.menuItem, darkMode && styles.borderDark]} onPress={onPress} activeOpacity={0.7}>
             <Ionicons name={icon} size={22} color={color} style={{ marginRight: 16 }} />
-            <Text style={styles.menuLabel}>{label}</Text>
-            <Ionicons name="chevron-forward" size={16} color="#bbb" />
+            <Text style={[styles.menuLabel, darkMode && styles.textDark]}>{label}</Text>
+            <Ionicons name="chevron-forward" size={16} color={darkMode ? "#555" : "#bbb"} />
         </TouchableOpacity>
     );
 
     const HeaderSubHandler = ({ title }: any) => (
-        <View style={styles.subHeader}>
+        <View style={[styles.subHeader, { backgroundColor: colors.card }]}>
             <TouchableOpacity onPress={() => setViewMode('menu')} style={{ padding: 8, marginLeft: -8 }}>
-                <Ionicons name="arrow-back" size={24} color="#000" />
+                <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.subHeaderTitle}>{title}</Text>
+            <Text style={[styles.subHeaderTitle, { color: colors.text }]}>{title}</Text>
         </View>
     );
 
     const renderMenu = () => (
         <>
-            <View style={styles.header}>
+            <View style={[styles.header, darkMode && styles.headerDark]}>
                 <View style={styles.userInfo}>
                     <Text style={styles.heyText}>Hello,</Text>
-                    <Text style={styles.userName}>{user?.name || 'Guest User'}</Text>
+                    <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name || 'Guest User'}</Text>
                 </View>
                 <TouchableOpacity onPress={openEditProfile} activeOpacity={0.8}>
                     <Image source={{ uri: user?.avatar || AVATARS[0] }} style={styles.profilePic} />
@@ -234,7 +310,7 @@ const ProfileScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.gridContainer}>
+            <View style={[styles.gridContainer, darkMode && styles.menuGroupDark]}>
                 <QuickBtn icon="cube-outline" label="Orders" onPress={() => setViewMode('orders')} color="#2874F0" />
                 <QuickBtn icon="heart-outline" label="Wishlist" onPress={() => setViewMode('wishlist')} color="#FF4081" />
                 <QuickBtn icon="gift-outline" label="Coupons" onPress={() => Alert.alert("No Coupons")} color="#FF9800" />
@@ -242,26 +318,51 @@ const ProfileScreen = () => {
             </View>
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-                <Text style={styles.sectionHeader}>Account Settings</Text>
-                <View style={styles.menuGroup}>
+                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>Account Settings</Text>
+                <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
                     <MenuItem icon="person-outline" label="Edit Profile" onPress={openEditProfile} />
                     <MenuItem icon="location-outline" label="Saved Addresses" onPress={() => setViewMode('addresses')} />
-                    <MenuItem icon="language-outline" label="Select Language" onPress={() => Alert.alert("English selected")} />
+                    <MenuItem icon="card-outline" label="Payment Methods" onPress={() => setPaymentModalVisible(true)} color="#00897B" />
+                    <MenuItem icon="lock-closed-outline" label="Security & Password" onPress={() => setSecurityModalVisible(true)} color="#E91E63" />
+                    <MenuItem icon="notifications-outline" label="Notifications" onPress={() => setNotificationsModalVisible(true)} color="#FF6F00" />
+                    <MenuItem icon="language-outline" label="Select Language" onPress={() => setLanguageModalVisible(true)} />
                 </View>
 
-                <Text style={styles.sectionHeader}>My Activity</Text>
-                <View style={styles.menuGroup}>
-                    <MenuItem icon="star-outline" label="Reviews" onPress={() => Alert.alert("No reviews yet")} color="#FFC107" />
-                    <MenuItem icon="help-circle-outline" label="Q & A" onPress={() => navigation.navigate('Static', { type: 'about' })} color="#673AB7" />
+                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>App Preferences</Text>
+                <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
+                    <TouchableOpacity style={[styles.menuItem, darkMode && styles.borderDark]} onPress={toggleDarkMode}>
+                        <View style={styles.menuLeft}>
+                            <Ionicons name="moon-outline" size={22} color="#5E35B1" />
+                            <Text style={[styles.menuLabel, { marginLeft: 16 }, darkMode && styles.textDark]}>Dark Mode</Text>
+                        </View>
+                        <View style={[styles.switch, darkMode && styles.switchActive]}>
+                            <View style={[styles.switchThumb, darkMode && styles.switchThumbActive]} />
+                        </View>
+                    </TouchableOpacity>
+                    <MenuItem icon="download-outline" label="Download Invoices" onPress={() => Alert.alert("Invoices", "View and download your order invoices")} color="#1976D2" />
                 </View>
 
-                <Text style={styles.sectionHeader}>Feedback & Information</Text>
-                <View style={styles.menuGroup}>
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>My Activity</Text>
+                <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
+                    <MenuItem icon="star-outline" label="Reviews & Ratings" onPress={() => Alert.alert("Reviews", "No reviews yet")} color="#FFC107" />
+                    <MenuItem icon="help-circle-outline" label="Questions & Answers" onPress={() => navigation.navigate('Static', { type: 'about' })} color="#673AB7" />
+                    <MenuItem icon="chatbubbles-outline" label="My Chats" onPress={() => Alert.alert("Chats", "View your conversations with sellers")} color="#00ACC1" />
+                </View>
+
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>Earn & Rewards</Text>
+                <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
+                    <MenuItem icon="gift-outline" label="Refer & Earn" onPress={() => Alert.alert("Refer & Earn", "Invite friends and earn rewards!\n\nShare your referral code: SARI2026")} color="#8E24AA" />
+                    <MenuItem icon="wallet-outline" label="My Wallet" onPress={() => Alert.alert("Wallet", "Balance: ₹0\n\nEarn cashback on purchases!")} color="#43A047" />
+                </View>
+
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>Feedback & Information</Text>
+                <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
                     <MenuItem icon="document-text-outline" label="Terms, Policies and Licenses" onPress={() => navigation.navigate('Static', { type: 'terms' })} color="#607D8B" />
                     <MenuItem icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => navigation.navigate('Static', { type: 'privacy' })} color="#607D8B" />
+                    <MenuItem icon="information-circle-outline" label="About Us" onPress={() => navigation.navigate('Static', { type: 'about' })} color="#607D8B" />
                 </View>
 
-                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleLogout}>
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
 
@@ -271,7 +372,7 @@ const ProfileScreen = () => {
     );
 
     const renderOrdersView = () => (
-        <View style={styles.subView}>
+        <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title={`My Orders (${orders.length})`} />
             <ScrollView contentContainerStyle={styles.subScroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
                 {orders.length === 0 ? <EmptyState lottie="https://assets9.lottiefiles.com/packages/lf20_sif17k.json" title="No orders yet" subtitle="Items you buy will appear here" /> :
@@ -281,27 +382,27 @@ const ProfileScreen = () => {
     );
 
     const renderAddressesView = () => (
-        <View style={styles.subView}>
+        <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title="My Addresses" />
             <ScrollView contentContainerStyle={styles.subScroll}>
-                <TouchableOpacity style={styles.addNewAddressBtn} onPress={() => navigation.navigate('Address')}>
+                <TouchableOpacity style={[styles.addNewAddressBtn, { backgroundColor: colors.card }]} onPress={() => navigation.navigate('Address')}>
                     <Ionicons name="add-circle-outline" size={24} color="#2874F0" />
                     <Text style={styles.addNewAddressText}>Add a new address</Text>
                 </TouchableOpacity>
                 {addresses.map((a, i) => (
-                    <View key={i} style={styles.addressCard}>
+                    <View key={i} style={[styles.addressCard, { backgroundColor: colors.card }]}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <View>
-                                <Text style={styles.addrType}>{a.addressType}</Text>
-                                <Text style={styles.addrName}>{a.fullName}</Text>
+                                <Text style={[styles.addrType, { backgroundColor: colors.background, color: colors.subText }]}>{a.addressType}</Text>
+                                <Text style={[styles.addrName, { color: colors.text }]}>{a.fullName}</Text>
                             </View>
                             <TouchableOpacity style={{ padding: 5 }} onPress={() => navigation.navigate('Address')}>
-                                <Ionicons name="create-outline" size={20} color="#666" />
+                                <Ionicons name="create-outline" size={20} color={colors.subText} />
                             </TouchableOpacity>
                         </View>
-                        <Text style={styles.addrText}>{a.address}, {a.city}</Text>
-                        <Text style={styles.addrText}>{a.state} - {a.pincode}</Text>
-                        <Text style={[styles.addrText, { marginTop: 5, fontWeight: '600' }]}>Mobile: {a.mobileNumber}</Text>
+                        <Text style={[styles.addrText, { color: colors.subText }]}>{a.address}, {a.city}</Text>
+                        <Text style={[styles.addrText, { color: colors.subText }]}>{a.state} - {a.pincode}</Text>
+                        <Text style={[styles.addrText, { marginTop: 5, fontWeight: '600', color: colors.subText }]}>Mobile: {a.mobileNumber}</Text>
                     </View>
                 ))}
             </ScrollView>
@@ -309,20 +410,20 @@ const ProfileScreen = () => {
     );
 
     const renderWishlistView = () => (
-        <View style={styles.subView}>
+        <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title={`My Wishlist (${wishlist.length})`} />
             <ScrollView contentContainerStyle={styles.subScroll}>
                 {wishlist.length === 0 ? <EmptyState lottie="https://assets5.lottiefiles.com/packages/lf20_jbrw3hcz.json" title="Wishlist is empty" subtitle="Save your favorite items here" /> :
                     wishlist.map((item, i) => (
-                        <TouchableOpacity key={i} style={styles.wishlistItem} onPress={() => navigation.navigate('ProductDetail', { id: item._id })} activeOpacity={0.8}>
+                        <TouchableOpacity key={i} style={[styles.wishlistItem, { backgroundColor: colors.card }]} onPress={() => navigation.navigate('ProductDetail', { id: item._id })} activeOpacity={0.8}>
                             <Image source={{ uri: item.images?.image1 }} style={styles.wishlistImg} />
                             <View style={{ flex: 1, marginLeft: 16 }}>
-                                <Text numberOfLines={1} style={styles.wishlistTitle}>{item.title}</Text>
-                                <Text style={styles.wishlistPrice}>₹{item.price}</Text>
+                                <Text numberOfLines={1} style={[styles.wishlistTitle, { color: colors.text }]}>{item.title}</Text>
+                                <Text style={[styles.wishlistPrice, { color: colors.text }]}>₹{item.price}</Text>
                                 <Text style={{ color: '#388E3C', fontSize: 12, marginTop: 4, fontWeight: '600' }}>In Stock</Text>
                             </View>
                             <TouchableOpacity style={{ padding: 10 }}>
-                                <Ionicons name="trash-outline" size={22} color="#aaa" />
+                                <Ionicons name="trash-outline" size={22} color={colors.subText} />
                             </TouchableOpacity>
                         </TouchableOpacity>
                     ))}
@@ -333,14 +434,14 @@ const ProfileScreen = () => {
     const EmptyState = ({ lottie, title, subtitle }: any) => (
         <View style={{ alignItems: 'center', marginTop: 80 }}>
             <LottieView source={{ uri: lottie }} autoPlay loop style={{ width: 180, height: 180 }} />
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: 20 }}>{title}</Text>
-            {subtitle && <Text style={{ fontSize: 14, color: '#888', marginTop: 5 }}>{subtitle}</Text>}
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text, marginTop: 20 }}>{title}</Text>
+            {subtitle && <Text style={{ fontSize: 14, color: colors.subText, marginTop: 5 }}>{subtitle}</Text>}
         </View>
     );
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <SafeAreaView style={[styles.container, darkMode && styles.containerDark]} edges={['top']}>
+            <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
             {viewMode === 'menu' && renderMenu()}
             {viewMode === 'orders' && renderOrdersView()}
             {viewMode === 'addresses' && renderAddressesView()}
@@ -369,6 +470,177 @@ const ProfileScreen = () => {
                 </KeyboardAvoidingView>
             </Modal>
 
+            {/* Payment Methods Modal */}
+            <Modal visible={paymentModalVisible} animationType="slide" transparent={true} onRequestClose={() => setPaymentModalVisible(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Payment Methods</Text>
+                            <TouchableOpacity onPress={() => setPaymentModalVisible(false)}><Ionicons name="close" size={24} color="#000" /></TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <TouchableOpacity style={styles.paymentCard}>
+                                <Ionicons name="card-outline" size={24} color="#00897B" />
+                                <View style={{ flex: 1, marginLeft: 16 }}>
+                                    <Text style={styles.paymentTitle}>Add Debit/Credit Card</Text>
+                                    <Text style={styles.paymentSubtitle}>Save cards for faster checkout</Text>
+                                </View>
+                                <Ionicons name="add-circle-outline" size={24} color="#2874F0" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.paymentCard}>
+                                <Ionicons name="logo-google" size={24} color="#4285F4" />
+                                <View style={{ flex: 1, marginLeft: 16 }}>
+                                    <Text style={styles.paymentTitle}>Google Pay</Text>
+                                    <Text style={styles.paymentSubtitle}>Link your Google Pay account</Text>
+                                </View>
+                                <Ionicons name="add-circle-outline" size={24} color="#2874F0" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.paymentCard}>
+                                <Ionicons name="wallet-outline" size={24} color="#8E24AA" />
+                                <View style={{ flex: 1, marginLeft: 16 }}>
+                                    <Text style={styles.paymentTitle}>PhonePe / Paytm</Text>
+                                    <Text style={styles.paymentSubtitle}>Add UPI payment methods</Text>
+                                </View>
+                                <Ionicons name="add-circle-outline" size={24} color="#2874F0" />
+                            </TouchableOpacity>
+                            <View style={styles.infoBox}>
+                                <Ionicons name="shield-checkmark" size={20} color="#43A047" />
+                                <Text style={styles.infoText}>Your payment information is encrypted and secure</Text>
+                            </View>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Security & Password Modal */}
+            <Modal visible={securityModalVisible} animationType="slide" transparent={true} onRequestClose={() => setSecurityModalVisible(false)}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Security & Password</Text>
+                            <TouchableOpacity onPress={() => setSecurityModalVisible(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <Text style={[styles.inputLabel, { color: colors.subText }]}>Current Password</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                placeholder="Enter current password"
+                                placeholderTextColor={colors.subText}
+                                secureTextEntry
+                                value={currentPassword}
+                                onChangeText={setCurrentPassword}
+                            />
+                            <Text style={[styles.inputLabel, { color: colors.subText }]}>New Password</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                placeholder="Enter new password"
+                                placeholderTextColor={colors.subText}
+                                secureTextEntry
+                                value={newPassword}
+                                onChangeText={setNewPassword}
+                            />
+                            <Text style={[styles.inputLabel, { color: colors.subText }]}>Confirm New Password</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                                placeholder="Confirm new password"
+                                placeholderTextColor={colors.subText}
+                                secureTextEntry
+                                value={confirmPassword}
+                                onChangeText={setConfirmPassword}
+                            />
+
+                            <View style={[styles.securityOption, { borderBottomColor: colors.border }]}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[styles.securityTitle, { color: colors.text }]}>Two-Factor Authentication</Text>
+                                    <Text style={[styles.securitySubtitle, { color: colors.subText }]}>Add extra security to your account</Text>
+                                </View>
+                                <Text style={styles.securityLink}>Setup</Text>
+                            </View>
+
+                            <View style={[styles.securityOption, { borderBottomColor: colors.border }]}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[styles.securityTitle, { color: colors.text }]}>Login Activity</Text>
+                                    <Text style={[styles.securitySubtitle, { color: colors.subText }]}>View recent login history</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color={colors.subText} />
+                            </View>
+                        </ScrollView>
+                        <TouchableOpacity style={styles.saveBtn} onPress={handleUpdatePassword}>
+                            <Text style={styles.saveBtnText}>Update Password</Text>
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
+
+            {/* Notifications Modal */}
+            <Modal visible={notificationsModalVisible} animationType="slide" transparent={true} onRequestClose={() => setNotificationsModalVisible(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Notification Settings</Text>
+                            <TouchableOpacity onPress={() => setNotificationsModalVisible(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={styles.notifOption}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.notifTitle}>Order Updates</Text>
+                                    <Text style={styles.notifSubtitle}>Get notified about order status</Text>
+                                </View>
+                                <TouchableOpacity onPress={() => setNotifOrders(!notifOrders)} style={[styles.switch, notifOrders && styles.switchActive]}>
+                                    <View style={[styles.switchThumb, notifOrders && styles.switchThumbActive]} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.notifOption}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.notifTitle}>Offers & Promotions</Text>
+                                    <Text style={styles.notifSubtitle}>Exclusive deals and discounts</Text>
+                                </View>
+                                <TouchableOpacity onPress={() => setNotifOffers(!notifOffers)} style={[styles.switch, notifOffers && styles.switchActive]}>
+                                    <View style={[styles.switchThumb, notifOffers && styles.switchThumbActive]} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.notifOption}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.notifTitle}>App Updates</Text>
+                                    <Text style={styles.notifSubtitle}>New features and improvements</Text>
+                                </View>
+                                <TouchableOpacity onPress={() => setNotifUpdates(!notifUpdates)} style={[styles.switch, notifUpdates && styles.switchActive]}>
+                                    <View style={[styles.switchThumb, notifUpdates && styles.switchThumbActive]} />
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                        <TouchableOpacity style={styles.saveBtn} onPress={() => { setNotificationsModalVisible(false); Alert.alert('Saved', 'Notification preferences updated!'); }}>
+                            <Text style={styles.saveBtnText}>Save Preferences</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Language Selection Modal */}
+            <Modal visible={languageModalVisible} animationType="slide" transparent={true} onRequestClose={() => setLanguageModalVisible(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Language</Text>
+                            <TouchableOpacity onPress={() => setLanguageModalVisible(false)}><Ionicons name="close" size={24} color="#000" /></TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {['English', 'हिन्दी (Hindi)', 'ગુજરાતી (Gujarati)', 'मराठी (Marathi)', 'தமிழ் (Tamil)', 'తెలుగు (Telugu)'].map((lang, i) => (
+                                <TouchableOpacity key={i} style={styles.langOption} onPress={() => setSelectedLanguage(lang)}>
+                                    <Text style={styles.langText}>{lang}</Text>
+                                    {selectedLanguage === lang && <Ionicons name="checkmark-circle" size={24} color="#2874F0" />}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity style={styles.saveBtn} onPress={applyLanguage}>
+                            <Text style={styles.saveBtnText}>Apply Language</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             {loading && <View style={styles.loaderOverlay}><ActivityIndicator size="large" color="#2874F0" /></View>}
         </SafeAreaView>
     );
@@ -395,11 +667,20 @@ const styles = StyleSheet.create({
     sectionHeader: { fontSize: 13, fontWeight: 'bold', color: '#878787', marginLeft: 20, marginTop: 15, marginBottom: 10, textTransform: 'uppercase' },
     menuGroup: { backgroundColor: '#fff', marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.02, elevation: 1 },
     menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#f8f8f8' },
+    menuLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
     menuLabel: { flex: 1, fontSize: 15, color: '#212121' },
 
     logoutBtn: { backgroundColor: '#fff', marginVertical: 20, marginHorizontal: 20, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4 },
     logoutText: { color: '#2874F0', fontWeight: 'bold', fontSize: 15 },
     version: { textAlign: 'center', color: '#ccc', marginBottom: 30, fontSize: 12 },
+
+    // Dark Mode Styles
+    containerDark: { backgroundColor: '#121212' },
+    headerDark: { backgroundColor: '#1E1E1E' },
+    menuGroupDark: { backgroundColor: '#1E1E1E' },
+    textDark: { color: '#E0E0E0' },
+    subTextDark: { color: '#B0B0B0' },
+    borderDark: { borderBottomColor: '#333' },
 
     // Sub Views
     subView: { flex: 1, backgroundColor: '#f1f3f6' },
@@ -408,7 +689,7 @@ const styles = StyleSheet.create({
     subScroll: { padding: 10, paddingBottom: 40 },
 
     // Orders
-    orderCard: { backgroundColor: '#fff', marginBottom: 12, borderRadius: 8, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, radius: 4, elevation: 1 },
+    orderCard: { backgroundColor: '#fff', marginBottom: 12, borderRadius: 8, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
     orderHeader: { flexDirection: 'row', alignItems: 'center' },
     orderPreviewImg: { width: 50, height: 50, borderRadius: 4, marginRight: 12, backgroundColor: '#f0f0f0' },
     orderIconPlaceholder: { width: 50, height: 50, borderRadius: 4, marginRight: 12, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center' },
@@ -452,6 +733,32 @@ const styles = StyleSheet.create({
     avOpt: { width: 56, height: 56, borderRadius: 28, marginRight: 12, borderWidth: 2, borderColor: 'transparent', padding: 2 },
     avSel: { borderColor: '#2874F0' },
     avImg: { width: '100%', height: '100%', borderRadius: 25 },
+
+    // Payment Methods
+    paymentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', padding: 16, borderRadius: 8, marginBottom: 12 },
+    paymentTitle: { fontSize: 15, fontWeight: '600', color: '#212121', marginBottom: 4 },
+    paymentSubtitle: { fontSize: 13, color: '#666' },
+    infoBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E8F5E9', padding: 12, borderRadius: 8, marginTop: 10 },
+    infoText: { fontSize: 13, color: '#2E7D32', marginLeft: 10, flex: 1 },
+
+    // Security
+    securityOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+    securityTitle: { fontSize: 15, fontWeight: '600', color: '#212121', marginBottom: 4 },
+    securitySubtitle: { fontSize: 13, color: '#666' },
+    securityLink: { fontSize: 14, color: '#2874F0', fontWeight: '600' },
+
+    // Notifications
+    notifOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+    notifTitle: { fontSize: 15, fontWeight: '600', color: '#212121', marginBottom: 4 },
+    notifSubtitle: { fontSize: 13, color: '#666' },
+    switch: { width: 50, height: 28, borderRadius: 14, backgroundColor: '#ccc', padding: 2, justifyContent: 'center' },
+    switchActive: { backgroundColor: '#2874F0' },
+    switchThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
+    switchThumbActive: { alignSelf: 'flex-end' },
+
+    // Language
+    langOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+    langText: { fontSize: 15, color: '#212121' },
 
     loaderOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }
 });

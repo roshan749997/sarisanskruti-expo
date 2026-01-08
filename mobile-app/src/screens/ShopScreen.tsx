@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const SPACING = 12;
@@ -25,6 +26,7 @@ const ITEM_WIDTH = (width - SPACING * (COL_NUM + 1)) / COL_NUM;
 const ShopScreen = () => {
     const navigation = useNavigation<any>();
     const scrollX = useRef(new Animated.Value(0)).current;
+    const { colors, darkMode } = useTheme();
 
     // Split categories for better layout
     const topCategories = [
@@ -72,16 +74,16 @@ const ShopScreen = () => {
     ];
 
     const Header = () => (
-        <View style={styles.header}>
-            <TouchableOpacity style={styles.searchBar} onPress={() => navigation.navigate('Search')}>
-                <Ionicons name="search" size={20} color="#878787" style={{ marginRight: 10 }} />
-                <Text style={styles.searchText}>Search for products...</Text>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+            <TouchableOpacity style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate('Search')}>
+                <Ionicons name="search" size={20} color={colors.subText} style={{ marginRight: 10 }} />
+                <Text style={[styles.searchText, { color: colors.subText }]}>Search for products...</Text>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity style={styles.iconBtn}>
-                    <Ionicons name="mic-outline" size={20} color="#666" />
+                    <Ionicons name="mic-outline" size={20} color={colors.subText} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconBtn}>
-                    <Ionicons name="camera-outline" size={20} color="#666" />
+                    <Ionicons name="camera-outline" size={20} color={colors.subText} />
                 </TouchableOpacity>
             </TouchableOpacity>
         </View>
@@ -96,11 +98,11 @@ const ShopScreen = () => {
                         style={styles.circleItem}
                         onPress={() => navigation.navigate(item.path, item.params)}
                     >
-                        <View style={[styles.circleImageContainer, item.highlight && styles.circleHighlight]}>
+                        <View style={[styles.circleImageContainer, item.highlight && styles.circleHighlight, { borderColor: item.highlight ? '#E91E63' : colors.card, backgroundColor: colors.card }]}>
                             <Image source={{ uri: item.image }} style={styles.circleImage} />
                             {item.highlight && <View style={styles.liveDot} />}
                         </View>
-                        <Text style={styles.circleText}>{item.name}</Text>
+                        <Text style={[styles.circleText, { color: colors.text }]}>{item.name}</Text>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -165,11 +167,11 @@ const ShopScreen = () => {
 
     const renderGridItem = ({ item }: { item: any }) => (
         <TouchableOpacity
-            style={styles.gridCard}
+            style={[styles.gridCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => navigation.navigate(item.path, item.params)}
             activeOpacity={0.9}
         >
-            <View style={styles.gridImageContainer}>
+            <View style={[styles.gridImageContainer, { backgroundColor: colors.background }]}>
                 <Image source={{ uri: item.image }} style={styles.gridImage} resizeMode="cover" />
                 {item.badge && (
                     <View style={[styles.badge, { backgroundColor: getBadgeColor(item.badge) }]}>
@@ -178,14 +180,14 @@ const ShopScreen = () => {
                 )}
             </View>
             <View style={styles.gridInfo}>
-                <Text style={styles.gridTitle} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.gridDesc}>{item.desc}</Text>
+                <Text style={[styles.gridTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+                <Text style={[styles.gridDesc, { color: colors.subText }]}>{item.desc}</Text>
             </View>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
             <Header />
             <FlatList
                 data={collections}
@@ -199,8 +201,8 @@ const ShopScreen = () => {
                         <TopCategories />
                         <BannerCarousel />
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Curated Collections</Text>
-                            <MaterialCommunityIcons name="sort-variant" size={20} color="#666" />
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Curated Collections</Text>
+                            <MaterialCommunityIcons name="sort-variant" size={20} color={colors.subText} />
                         </View>
                     </View>
                 )}

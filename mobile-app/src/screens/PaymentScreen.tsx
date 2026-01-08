@@ -4,19 +4,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 
 const PaymentScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { payuData } = route.params;
   const { clearCart } = useCart();
+  const { colors, darkMode } = useTheme();
   const [loading, setLoading] = useState(true);
 
   // Construct the form HTML
+  const bgColor = darkMode ? '#121212' : '#ffffff';
+  const textColor = darkMode ? '#ffffff' : '#000000';
+
   const formHtml = `
     <html>
       <head>
         <title>Redirecting to Payment...</title>
+        <style>
+          body { background-color: ${bgColor}; color: ${textColor}; font-family: system-ui; }
+        </style>
       </head>
       <body onload="document.getElementById('payuForm').submit()">
         <center>
@@ -59,12 +67,12 @@ const PaymentScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <WebView
         source={{ html: formHtml }} // Use baseUrl for assets if needed
         onNavigationStateChange={handleNavigationStateChange}
         startInLoadingState={true}
-        renderLoading={() => <ActivityIndicator size="large" color="#000" style={styles.loading} />}
+        renderLoading={() => <ActivityIndicator size="large" color={colors.text} style={styles.loading} />}
         javaScriptEnabled={true}
         domStorageEnabled={true}
       />

@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, StatusBar, Platform
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const OrderFailureScreen = () => {
     const navigation = useNavigation<any>();
     const shakeAnimation = useRef(new Animated.Value(0)).current;
+    const { colors, darkMode } = useTheme();
 
     useEffect(() => {
         // Shake animation sequence
@@ -23,7 +25,7 @@ const OrderFailureScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
             <View style={styles.content}>
                 <Animated.View style={[styles.iconContainer, { transform: [{ translateX: shakeAnimation }] }]}>
                     <View style={styles.circle}>
@@ -31,8 +33,8 @@ const OrderFailureScreen = () => {
                     </View>
                 </Animated.View>
 
-                <Text style={styles.title}>Payment Failed</Text>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.title, { color: colors.text }]}>Payment Failed</Text>
+                <Text style={[styles.subtitle, { color: colors.subText }]}>
                     Something went wrong with your transaction. Please try again or choose a different payment method.
                 </Text>
 
@@ -41,7 +43,7 @@ const OrderFailureScreen = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('MainTab', { screen: 'Cart' })}>
-                    <Text style={styles.secondaryButtonText}>GO TO CART</Text>
+                    <Text style={[styles.secondaryButtonText, { color: colors.text }]}>GO TO CART</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

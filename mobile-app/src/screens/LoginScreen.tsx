@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
+  const { colors, darkMode } = useTheme();
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
   const [formData, setFormData] = useState({
     email: '',
@@ -61,10 +63,61 @@ const LoginScreen = () => {
       setOtpSent(true);
       setOtpTimer(60);
     } catch (err: any) {
-      setError(err.message || 'Failed to send OTP');
+      const friendlyError = err.response?.status === 404
+        ? 'Phone number not registered. Please sign up first.'
+        : err.response?.status === 400
+          ? 'Please enter a valid 10-digit phone number'
+          : 'Failed to send OTP. Please try again.';
+      setError(friendlyError);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getUserFriendlyError = (error: any): string => {
+    // Check if it's an axios error with response
+    if (error.response) {
+      const status = error.response.status;
+      const message = error.response.data?.message || '';
+
+      // Handle specific status codes
+      switch (status) {
+        case 400:
+          if (message.toLowerCase().includes('email')) {
+            return 'Please enter a valid email address';
+          }
+          if (message.toLowerCase().includes('password')) {
+            return 'Password is required';
+          }
+          return 'Please check your input and try again';
+
+        case 401:
+          if (authMode === 'password') {
+            return 'Invalid email or password. Please check and try again.';
+          }
+          return 'Invalid OTP. Please check and try again.';
+
+        case 404:
+          if (authMode === 'password') {
+            return 'No account found with this email address. Please sign up first.';
+          }
+          return 'Phone number not registered. Please sign up first.';
+
+        case 500:
+          return 'Server error. Please try again later.';
+
+        default:
+          return message || 'Something went wrong. Please try again.';
+      }
+    }
+
+    // Handle network errors
+    if (error.request) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    // Handle other errors
+    return error.message || 'An unexpected error occurred. Please try again.';
   };
 
   const handleSubmit = async () => {
@@ -92,20 +145,20 @@ const LoginScreen = () => {
         navigation.navigate('MainTab', { screen: 'Home' });
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+      setError(getUserFriendlyError(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          style={styles.container}
+          style={[styles.container, { backgroundColor: colors.background }]}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -117,12 +170,12 @@ const LoginScreen = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account to continue shopping</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
+            <Text style={[styles.subtitle, { color: colors.subText }]}>Sign in to your account to continue shopping</Text>
           </View>
 
           {/* Form */}
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: colors.card }]}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             {success ? <Text style={styles.successText}>{success}</Text> : null}
 
@@ -167,10 +220,11 @@ const LoginScreen = () => {
             {authMode === 'password' ? (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                     placeholder="Enter your email"
+                    placeholderTextColor={colors.subText}
                     value={formData.email}
                     onChangeText={(text) => setFormData({ ...formData, email: text })}
                     keyboardType="email-address"
@@ -179,10 +233,11 @@ const LoginScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>Password</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                     placeholder="Enter your password"
+                    placeholderTextColor={colors.subText}
                     value={formData.password}
                     onChangeText={(text) => setFormData({ ...formData, password: text })}
                     secureTextEntry
@@ -196,10 +251,11 @@ const LoginScreen = () => {
             ) : (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Phone Number</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>Phone Number</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                     placeholder="Enter your 10-digit phone number"
+                    placeholderTextColor={colors.subText}
                     value={formData.phone}
                     onChangeText={(text) => setFormData({ ...formData, phone: text })}
                     keyboardType="phone-pad"
@@ -210,17 +266,18 @@ const LoginScreen = () => {
 
                 {otpSent && (
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Enter OTP</Text>
+                    <Text style={[styles.label, { color: colors.subText }]}>Enter OTP</Text>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                       placeholder="Enter 6-digit OTP"
+                      placeholderTextColor={colors.subText}
                       value={formData.otp}
                       onChangeText={(text) => setFormData({ ...formData, otp: text })}
                       keyboardType="number-pad"
                       maxLength={6}
                     />
                     {otpTimer > 0 && (
-                      <Text style={styles.timerText}>Resend OTP in {otpTimer} seconds</Text>
+                      <Text style={[styles.timerText, { color: colors.subText }]}>Resend OTP in {otpTimer} seconds</Text>
                     )}
                   </View>
                 )}

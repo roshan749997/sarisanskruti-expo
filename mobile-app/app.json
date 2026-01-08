@@ -1,11 +1,13 @@
 {
   "expo": {
-    "name": "Saree Sanskruti",
+    "name": "",
     "slug": "sarisanskruti-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/app_logo.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/app_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -13,10 +15,14 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/app_logo.png",
+      "bundleIdentifier": "com.roshan10062003.sarisanskrutimobile"
     },
     "android": {
+      "icon": "./assets/app_logo.png",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/app_logo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.roshan_10062003.sarisanskrutimobile"
@@ -29,4 +35,3 @@
     }
   }
 }
-

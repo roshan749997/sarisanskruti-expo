@@ -3,9 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.sarisanskruti.in/api';
 
+// Simple cache for API responses
+const cache: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 10000, // Reduced from 15s to 10s
   headers: {
     'Content-Type': 'application/json',
   },
@@ -149,10 +153,31 @@ export const api = {
       return res.data;
     }
   },
+  changePassword: async (passwordData: any) => {
+    const res = await apiClient.put('/auth/change-password', passwordData); // Assuming typical endpoint
+    return res.data;
+  },
 
   // Products
   getProducts: async () => {
-    const res = await apiClient.get('/products'); // Assuming endpoint exists, verifying frontend used explicit calls often
+    const cacheKey = 'products_all';
+    const now = Date.now();
+
+    // Check cache first
+    if (cache[cacheKey] && (now - cache[cacheKey].timestamp) < CACHE_DURATION) {
+      console.log('📦 Returning cached products');
+      return cache[cacheKey].data;
+    }
+
+    console.log('🌐 Fetching products from API');
+    const res = await apiClient.get('/products');
+
+    // Store in cache
+    cache[cacheKey] = {
+      data: res.data,
+      timestamp: now
+    };
+
     return res.data;
   },
   getProductById: async (id: string) => {
@@ -224,6 +249,12 @@ export const api = {
   searchProducts: async (query: string) => {
     const res = await apiClient.get(`/header/search?query=${encodeURIComponent(query)}`);
     return res.data;
+  },
+
+  // Cache management
+  clearCache: () => {
+    Object.keys(cache).forEach(key => delete cache[key]);
+    console.log('🗑️ Cache cleared');
   }
 };
 

@@ -21,6 +21,7 @@ import { api } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ const ProductDetailScreen = () => {
     const navigation = useNavigation<any>();
     const { id } = route.params;
     const insets = useSafeAreaInsets();
+    const { colors, darkMode } = useTheme();
 
     const { addToCart, cartCount } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -105,7 +107,7 @@ const ProductDetailScreen = () => {
 
     if (loading || !product) {
         return (
-            <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+            <View style={[styles.loadingContainer, { paddingTop: insets.top, backgroundColor: colors.background }]}>
                 <ActivityIndicator size="large" color="#E91E63" />
             </View>
         );
@@ -132,21 +134,21 @@ const ProductDetailScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.headerContainer}>
-                <Animated.View style={[styles.headerBg, { opacity: headerOpacity }]} />
+                <Animated.View style={[styles.headerBg, { opacity: headerOpacity, backgroundColor: colors.background, shadowOpacity: darkMode ? 0 : 0.1 }]} />
                 <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
                     <View style={styles.headerContent}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-                            <Ionicons name="arrow-back" size={24} color="#333" />
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.iconBtn, { backgroundColor: darkMode ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.8)' }]}>
+                            <Ionicons name="arrow-back" size={24} color={darkMode ? '#fff' : '#333'} />
                         </TouchableOpacity>
-                        <Animated.Text style={[styles.headerTitle, { opacity: headerOpacity }]} numberOfLines={1}>
+                        <Animated.Text style={[styles.headerTitle, { opacity: headerOpacity, color: colors.text }]} numberOfLines={1}>
                             {product.title}
                         </Animated.Text>
                         <View style={styles.headerRight}>
-                            <TouchableOpacity onPress={shareProduct} style={styles.iconBtn}>
-                                <Ionicons name="share-social-outline" size={24} color="#333" />
+                            <TouchableOpacity onPress={shareProduct} style={[styles.iconBtn, { backgroundColor: darkMode ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.8)' }]}>
+                                <Ionicons name="share-social-outline" size={24} color={darkMode ? '#fff' : '#333'} />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={styles.iconBtn}>
-                                <Ionicons name="cart-outline" size={24} color="#333" />
+                            <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={[styles.iconBtn, { backgroundColor: darkMode ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.8)' }]}>
+                                <Ionicons name="cart-outline" size={24} color={darkMode ? '#fff' : '#333'} />
                                 {cartCount > 0 && (
                                     <View style={styles.headerBadge}>
                                         <Text style={styles.headerBadgeText}>{cartCount > 9 ? '9+' : cartCount}</Text>
@@ -193,12 +195,12 @@ const ProductDetailScreen = () => {
                 </View>
 
                 {/* Product Info */}
-                <View style={styles.infoContainer}>
-                    <Text style={styles.brandText}>{product.product_info?.brand || 'Sarisanskruti'}</Text>
-                    <Text style={styles.titleText}>{product.title}</Text>
+                <View style={[styles.infoContainer, { backgroundColor: colors.background }]}>
+                    <Text style={[styles.brandText, { color: colors.subText }]}>{product.product_info?.brand || 'Sarisanskruti'}</Text>
+                    <Text style={[styles.titleText, { color: colors.text }]}>{product.title}</Text>
 
                     <View style={styles.priceRow}>
-                        <Text style={styles.priceText}>₹{sellPrice.toLocaleString('en-IN')}</Text>
+                        <Text style={[styles.priceText, { color: colors.text }]}>₹{sellPrice.toLocaleString('en-IN')}</Text>
                         {mrp > sellPrice && (
                             <Text style={styles.mrpText}>₹{mrp.toLocaleString('en-IN')}</Text>
                         )}
@@ -212,50 +214,50 @@ const ProductDetailScreen = () => {
                 </View>
 
                 {/* Sizes (Mock) */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Select Size</Text>
+                <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Size</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sizeScroll}>
                         {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
                             <TouchableOpacity
                                 key={size}
-                                style={[styles.sizeBox, selectedSize === size && styles.sizeBoxSelected]}
+                                style={[styles.sizeBox, selectedSize === size && styles.sizeBoxSelected, { borderColor: selectedSize === size ? '#E91E63' : colors.border }]}
                                 onPress={() => setSelectedSize(size)}
                             >
-                                <Text style={[styles.sizeText, selectedSize === size && styles.sizeTextSelected]}>{size}</Text>
+                                <Text style={[styles.sizeText, selectedSize === size && styles.sizeTextSelected, { color: selectedSize === size ? '#fff' : colors.text }]}>{size}</Text>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
                 </View>
 
                 {/* Details */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Product Details</Text>
+                <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Product Details</Text>
                     <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Material</Text>
-                        <Text style={styles.detailValue}>{product.product_info?.SareeMaterial || product.material || 'Silk Blend'}</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Material</Text>
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.SareeMaterial || product.material || 'Silk Blend'}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Color</Text>
-                        <Text style={styles.detailValue}>{product.product_info?.SareeColor || product.color || 'Multicolor'}</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Color</Text>
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.SareeColor || product.color || 'Multicolor'}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Pattern</Text>
-                        <Text style={styles.detailValue}>{product.product_info?.Pattern || 'Traditional'}</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Pattern</Text>
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.Pattern || 'Traditional'}</Text>
                     </View>
-                    <Text style={styles.descriptionText}>
+                    <Text style={[styles.descriptionText, { color: colors.subText }]}>
                         {product.description || 'Experience elegance with this premium quality saree, crafted to perfection for special occasions.'}
                     </Text>
                 </View>
 
                 {/* Delivery Info */}
-                <View style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
                     <View style={styles.deliveryRow}>
-                        <Ionicons name="cube-outline" size={20} color="#666" />
-                        <Text style={styles.deliveryText}>7 Day Return & Exchange</Text>
+                        <Ionicons name="cube-outline" size={20} color={colors.subText} />
+                        <Text style={[styles.deliveryText, { color: colors.text }]}>7 Day Return & Exchange</Text>
                     </View>
                     <View style={styles.deliveryRow}>
-                        <Ionicons name="card-outline" size={20} color="#666" />
-                        <Text style={styles.deliveryText}>Cash on Delivery Available</Text>
+                        <Ionicons name="card-outline" size={20} color={colors.subText} />
+                        <Text style={[styles.deliveryText, { color: colors.text }]}>Cash on Delivery Available</Text>
                     </View>
                 </View>
 
@@ -263,12 +265,12 @@ const ProductDetailScreen = () => {
             </ScrollView>
 
             {/* Bottom Bar */}
-            <View style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 }]}>
-                <TouchableOpacity style={styles.cartBtn} onPress={handleAddToCart} disabled={isAdding}>
-                    {isAdding ? <ActivityIndicator color="#000" /> : <Text style={styles.cartBtnText}>ADD TO CART</Text>}
+            <View style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16, backgroundColor: colors.background, borderTopColor: colors.border }]}>
+                <TouchableOpacity style={[styles.cartBtn, { backgroundColor: colors.background, borderColor: colors.text }]} onPress={handleAddToCart} disabled={isAdding}>
+                    {isAdding ? <ActivityIndicator color={colors.text} /> : <Text style={[styles.cartBtnText, { color: colors.text }]}>ADD TO CART</Text>}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.buyBtn} onPress={handleBuyNow}>
-                    <Text style={styles.buyBtnText}>BUY NOW</Text>
+                <TouchableOpacity style={[styles.buyBtn, { backgroundColor: colors.text }]} onPress={handleBuyNow}>
+                    <Text style={[styles.buyBtnText, { color: colors.background }]}>BUY NOW</Text>
                 </TouchableOpacity>
             </View>
         </View>

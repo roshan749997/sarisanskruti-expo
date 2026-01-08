@@ -23,11 +23,13 @@ import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import HeroSlider from '../components/HeroSlider';
 import Footer from '../components/Footer';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
+  const { colors, darkMode } = useTheme();
   const [products, setProducts] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
   const [trendingNow, setTrendingNow] = useState<any[]>([]);
@@ -120,9 +122,9 @@ const HomeScreen = () => {
         <Image source={{ uri: item.image }} style={styles.categoryCircleImage} />
         <View style={styles.categoryRing} />
       </View>
-      <Text style={styles.categoryCircleName} numberOfLines={2}>{item.name}</Text>
+      <Text style={[styles.categoryCircleName, { color: colors.text }]} numberOfLines={2}>{item.name}</Text>
     </TouchableOpacity>
-  ), [navigation]);
+  ), [navigation, colors]);
 
   const renderProductCard = useCallback(({ item, isGrid = false, isTrending = false }: { item: any, isGrid?: boolean, isTrending?: boolean }) => {
     const price = item.price || item.mrp || 0;
@@ -133,7 +135,7 @@ const HomeScreen = () => {
 
     return (
       <Pressable
-        style={[styles.productCard, isGrid && styles.gridProductCard]}
+        style={[styles.productCard, isGrid && styles.gridProductCard, { backgroundColor: colors.card, borderColor: colors.border }]}
         onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
       >
         <View style={styles.imageContainer}>
@@ -141,6 +143,7 @@ const HomeScreen = () => {
             source={{ uri: item.images?.image1 || 'https://via.placeholder.com/300x400' }}
             style={styles.productImage}
             resizeMode="cover"
+            defaultSource={require('../../assets/app_logo.png')}
           />
           <View style={styles.badgeContainer}>
             {isTrending && (
@@ -192,9 +195,9 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.productInfo}>
-          <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.productTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
           <View style={styles.priceRow}>
-            <Text style={styles.productPrice}>₹{price.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.productPrice, { color: colors.text }]}>₹{price.toLocaleString('en-IN')}</Text>
             {mrp > price && (
               <Text style={styles.mrpText}>₹{mrp.toLocaleString('en-IN')}</Text>
             )}
@@ -202,7 +205,7 @@ const HomeScreen = () => {
         </View>
       </Pressable>
     );
-  }, [isInWishlist, handleWishlistToggle, addToCart, navigation]);
+  }, [isInWishlist, handleWishlistToggle, addToCart, navigation, colors, darkMode]);
 
   const RenderHeader = useCallback(() => (
     <View>
@@ -222,9 +225,9 @@ const HomeScreen = () => {
       />
 
       {/* Shop By Category */}
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: colors.background, borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Shop by Category</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Shop by Category</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
             <Text style={styles.viewAllText}>View All</Text>
           </TouchableOpacity>
@@ -240,10 +243,10 @@ const HomeScreen = () => {
       </View>
 
       {/* Best Sellers */}
-      <View style={[styles.section, styles.bestSellerSection]}>
+      <View style={[styles.section, { backgroundColor: darkMode ? '#2C2C1E' : '#FFFDE7', borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>Best Sellers</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Best Sellers</Text>
             <Text style={styles.sectionSubtitle}>Most Loved Styles</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
@@ -268,9 +271,9 @@ const HomeScreen = () => {
       </View>
 
       {/* Promos */}
-      <View style={styles.promoSection}>
+      <View style={[styles.promoSection, { backgroundColor: colors.background, borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Festive Specials</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Festive Specials</Text>
         </View>
         <View style={styles.promoColumn}>
           <TouchableOpacity style={styles.promoBannerFull} activeOpacity={0.9} onPress={() => navigation.navigate('Shop')}>
@@ -291,9 +294,9 @@ const HomeScreen = () => {
       </View>
 
       {/* Trending Now Header */}
-      <View style={[styles.section, { borderBottomWidth: 0, paddingBottom: 10 }]}>
+      <View style={[styles.section, { borderBottomWidth: 0, paddingBottom: 10, backgroundColor: colors.background }]}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Trending Now</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Trending Now</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
             <Text style={styles.viewAllText}>See All</Text>
           </TouchableOpacity>
@@ -306,10 +309,10 @@ const HomeScreen = () => {
   ), [bestSellers, loading, renderCategoryCircle, renderProductCard, shopCategories, trendingNow.length, navigation]);
 
   const RenderFooter = useCallback(() => (
-    <View>
+    <View style={{ backgroundColor: colors.background }}>
       {/* Why Choose Us */}
-      <View style={styles.whyChooseUsSection}>
-        <Text style={styles.whyChooseUsTitle}>Why Sarisanskruti?</Text>
+      <View style={[styles.whyChooseUsSection, { backgroundColor: colors.background }]}>
+        <Text style={[styles.whyChooseUsTitle, { color: colors.text }]}>Why Sarisanskruti?</Text>
         <View style={styles.whyGrid}>
           {[
             { icon: '✨', title: 'Premium Quality', desc: 'Crafted with care' },

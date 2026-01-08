@@ -15,9 +15,11 @@ import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 const ForgotPasswordScreen = () => {
     const navigation = useNavigation<any>();
+    const { colors, darkMode } = useTheme();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -41,12 +43,12 @@ const ForgotPasswordScreen = () => {
 
     if (success) {
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
-                <View style={styles.container}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+                <View style={[styles.container, { backgroundColor: colors.background }]}>
                     <View style={styles.center}>
                         <Ionicons name="checkmark-circle-outline" size={80} color="green" />
-                        <Text style={styles.successTitle}>Check your email</Text>
-                        <Text style={styles.successText}>We have sent a password reset link to {email}</Text>
+                        <Text style={[styles.successTitle, { color: colors.text }]}>Check your email</Text>
+                        <Text style={[styles.successText, { color: colors.subText }]}>We have sent a password reset link to {email}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
                             <Text style={styles.buttonText}>Back to Login</Text>
                         </TouchableOpacity>
@@ -57,27 +59,28 @@ const ForgotPasswordScreen = () => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
-                <ScrollView contentContainerStyle={styles.container}>
+                <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                            <Ionicons name="arrow-back" size={24} color="#000" />
+                            <Ionicons name="arrow-back" size={24} color={colors.text} />
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.content}>
-                        <Text style={styles.title}>Forgot Password?</Text>
-                        <Text style={styles.subtitle}>Don't worry! It happens. Please enter the email associated with your account.</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>Forgot Password?</Text>
+                        <Text style={[styles.subtitle, { color: colors.subText }]}>Don't worry! It happens. Please enter the email associated with your account.</Text>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Email Address</Text>
+                            <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
                                 placeholder="Enter your email"
+                                placeholderTextColor={colors.subText}
                                 value={email}
                                 onChangeText={setEmail}
                                 autoCapitalize="none"

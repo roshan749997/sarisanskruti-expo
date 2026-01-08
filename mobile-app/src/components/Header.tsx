@@ -10,7 +10,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTheme } from '../context/ThemeContext';
+
 const Header = () => {
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -179,9 +182,9 @@ const Header = () => {
     : null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
       {/* Category Strip - Horizontal Scroll */}
-      <View style={styles.categoryStripContainer}>
+      <View style={[styles.categoryStripContainer, { borderTopColor: colors.border }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -200,6 +203,7 @@ const Header = () => {
                 style={[
                   styles.categoryText,
                   activeCategory === category.name && styles.categoryTextActive,
+                  { color: activeCategory === category.name ? '#e11d48' : colors.text }
                 ]}
               >
                 {category.name}
@@ -207,7 +211,7 @@ const Header = () => {
               <Ionicons
                 name={activeCategory === category.name ? 'chevron-up' : 'chevron-down'}
                 size={14}
-                color={activeCategory === category.name ? '#e11d48' : '#555'}
+                color={activeCategory === category.name ? '#e11d48' : colors.text}
                 style={styles.chevronIcon}
               />
             </TouchableOpacity>
@@ -230,11 +234,11 @@ const Header = () => {
           >
             <TouchableOpacity
               activeOpacity={1}
-              style={styles.modalContent}
+              style={[styles.modalContent, { backgroundColor: colors.card }]}
               onPress={(e) => e.stopPropagation()}
             >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{selectedCategory?.name}</Text>
+              <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>{selectedCategory?.name}</Text>
                 <View style={styles.modalHeaderActions}>
                   <TouchableOpacity
                     onPress={() => {
@@ -243,15 +247,15 @@ const Header = () => {
                         navigation.navigate(selectedCategory.path, selectedCategory.params);
                       }
                     }}
-                    style={styles.viewAllButton}
+                    style={[styles.viewAllButton, { borderColor: colors.border }]}
                   >
-                    <Text style={styles.viewAllText}>All {selectedCategory?.name}</Text>
+                    <Text style={[styles.viewAllText, { color: colors.text }]}>All {selectedCategory?.name}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => setActiveCategory(null)}
                     style={styles.closeButton}
                   >
-                    <Ionicons name="close" size={24} color="#333" />
+                    <Ionicons name="close" size={24} color={colors.text} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -260,10 +264,10 @@ const Header = () => {
                 {selectedCategory?.subcategories.map((subcategory, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={styles.subcategoryItem}
+                    style={[styles.subcategoryItem, { borderBottomColor: colors.border }]}
                     onPress={() => handleSubcategoryPress(subcategory)}
                   >
-                    <Text style={styles.subcategoryText}>{subcategory.name}</Text>
+                    <Text style={[styles.subcategoryText, { color: colors.subText }]}>{subcategory.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>

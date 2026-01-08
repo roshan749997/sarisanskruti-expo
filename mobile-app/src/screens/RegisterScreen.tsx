@@ -14,10 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
+  const { colors, darkMode } = useTheme();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -140,13 +142,13 @@ const RegisterScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          style={styles.container}
+          style={[styles.container, { backgroundColor: colors.background }]}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -158,30 +160,32 @@ const RegisterScreen = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join us to discover stylish kurtas and kurtis with exclusive offers</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
+            <Text style={[styles.subtitle, { color: colors.subText }]}>Join us to discover stylish kurtas and kurtis with exclusive offers</Text>
           </View>
 
           {/* Form */}
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: colors.card }]}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             {success ? <Text style={styles.successText}>{success}</Text> : null}
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>First Name</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>First Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                   placeholder="First name"
+                  placeholderTextColor={colors.subText}
                   value={formData.firstName}
                   onChangeText={(text) => setFormData({ ...formData, firstName: text })}
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>Last Name</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>Last Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                   placeholder="Last name"
+                  placeholderTextColor={colors.subText}
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({ ...formData, lastName: text })}
                 />
@@ -189,10 +193,11 @@ const RegisterScreen = () => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="Enter your email"
+                placeholderTextColor={colors.subText}
                 value={formData.email}
                 onChangeText={(text) => setFormData({ ...formData, email: text })}
                 keyboardType="email-address"
@@ -201,10 +206,11 @@ const RegisterScreen = () => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone Number</Text>
+              <Text style={[styles.label, { color: colors.subText }]}>Phone Number</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="Enter your 10-digit phone number"
+                placeholderTextColor={colors.subText}
                 value={formData.phone}
                 onChangeText={(text) => setFormData({ ...formData, phone: text })}
                 keyboardType="phone-pad"
@@ -218,10 +224,11 @@ const RegisterScreen = () => {
 
             {otpSent && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Enter OTP</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>Enter OTP</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                   placeholder="Enter 6-digit OTP"
+                  placeholderTextColor={colors.subText}
                   value={formData.otp}
                   onChangeText={(text) => setFormData({ ...formData, otp: text })}
                   keyboardType="number-pad"
@@ -235,20 +242,22 @@ const RegisterScreen = () => {
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                   placeholder="Create password"
+                  placeholderTextColor={colors.subText}
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
                   secureTextEntry
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>Confirm Password</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>Confirm Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                   placeholder="Confirm password"
+                  placeholderTextColor={colors.subText}
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                   secureTextEntry
@@ -306,7 +315,7 @@ const RegisterScreen = () => {
             )}
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
+              <Text style={[styles.footerText, { color: colors.subText }]}>Already have an account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.linkText}>Sign in here</Text>
               </TouchableOpacity>

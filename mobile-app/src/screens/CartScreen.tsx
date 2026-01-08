@@ -16,6 +16,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,7 @@ const CartScreen = () => {
     const navigation = useNavigation<any>();
     const { cart, removeFromCart, updateQuantity, clearCart, cartTotal, loading } = useCart();
     const { user } = useAuth();
+    const { colors, darkMode } = useTheme();
 
     const handleQuantityChange = (itemId: string, newQty: number) => {
         if (newQty < 1) {
@@ -83,17 +85,17 @@ const CartScreen = () => {
             : 0;
 
         return (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
                 <View style={styles.cardContent}>
-                    <View style={styles.imageContainer}>
+                    <View style={[styles.imageContainer, { backgroundColor: colors.background }]}>
                         <Image source={{ uri: item.image }} style={styles.itemImage} />
                     </View>
                     <View style={styles.detailsContainer}>
-                        <Text style={styles.itemTitle} numberOfLines={1}>{item.name}</Text>
-                        <Text style={styles.itemSubtitle}>{item.color || 'Multicolor'} {item.size ? `| Size: ${item.size}` : ''}</Text>
+                        <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+                        <Text style={[styles.itemSubtitle, { color: colors.subText }]}>{item.color || 'Multicolor'} {item.size ? `| Size: ${item.size}` : ''}</Text>
 
                         <View style={styles.priceRow}>
-                            <Text style={styles.sellingPrice}>₹{itemPrice.toLocaleString()}</Text>
+                            <Text style={[styles.sellingPrice, { color: colors.text }]}>₹{itemPrice.toLocaleString()}</Text>
                             {discountPercentage > 0 && (
                                 <>
                                     <Text style={styles.mrpPrice}>₹{itemMRP.toLocaleString()}</Text>
@@ -156,13 +158,13 @@ const CartScreen = () => {
     }
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>My Cart ({cart.length})</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>My Cart ({cart.length})</Text>
             </View>
 
             <StepIndicator />
@@ -181,28 +183,28 @@ const CartScreen = () => {
                 </View>
 
                 {/* Price Details */}
-                <View style={styles.priceDetailsCard}>
+                <View style={[styles.priceDetailsCard, { backgroundColor: colors.card }]}>
                     <Text style={styles.priceTitle}>Price Details ({cart.length} items)</Text>
                     <View style={styles.priceRowDetails}>
-                        <Text style={styles.priceLabel}>Total MRP</Text>
-                        <Text style={styles.priceValue}>₹{totalMRP.toLocaleString()}</Text>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>Total MRP</Text>
+                        <Text style={[styles.priceValue, { color: colors.text }]}>₹{totalMRP.toLocaleString()}</Text>
                     </View>
                     <View style={styles.priceRowDetails}>
-                        <Text style={styles.priceLabel}>Discount on MRP</Text>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>Discount on MRP</Text>
                         <Text style={[styles.priceValue, styles.greenText]}>-₹{totalDiscount.toLocaleString()}</Text>
                     </View>
                     <View style={styles.priceRowDetails}>
-                        <Text style={styles.priceLabel}>Shipping Fee</Text>
-                        <Text style={[styles.priceValue, shippingCost === 0 ? styles.greenText : styles.priceValue]}>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>Shipping Fee</Text>
+                        <Text style={[styles.priceValue, shippingCost === 0 ? styles.greenText : { color: colors.text }]}>
                             {shippingCost === 0 ? 'FREE' : `₹${shippingCost}`}
                         </Text>
                     </View>
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
                     <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>Total Amount</Text>
-                        <Text style={styles.totalValue}>₹{finalAmount.toLocaleString()}</Text>
+                        <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount</Text>
+                        <Text style={[styles.totalValue, { color: colors.text }]}>₹{finalAmount.toLocaleString()}</Text>
                     </View>
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
                     <View style={styles.savingsContainer}>
                         <Text style={styles.savingsText}>You will save ₹{totalDiscount.toLocaleString()} on this order</Text>
                     </View>
@@ -228,10 +230,10 @@ const CartScreen = () => {
             </ScrollView>
 
             {/* Sticky Bottom Bar */}
-            <View style={styles.bottomBar}>
+            <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <View>
                     <Text style={styles.bottomTotalLabel}>Total Amount</Text>
-                    <Text style={styles.bottomTotalValue}>₹{finalAmount.toLocaleString()}</Text>
+                    <Text style={[styles.bottomTotalValue, { color: colors.text }]}>₹{finalAmount.toLocaleString()}</Text>
                 </View>
                 <TouchableOpacity
                     style={styles.placeOrderBtn}

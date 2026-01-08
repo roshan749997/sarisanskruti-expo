@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Dimensions,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const OrderSuccessScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const { colors, darkMode } = useTheme();
     const fadeValue = useRef(new Animated.Value(0)).current;
 
     // Animation refs for Checkmark
@@ -76,11 +78,11 @@ const OrderSuccessScreen = () => {
     const dateStr = deliveryDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
 
             <View style={styles.content}>
 
-                <Animated.View style={[styles.card, { opacity: fadeValue }]}>
+                <Animated.View style={[styles.card, { opacity: fadeValue, backgroundColor: colors.card }]}>
 
                     {/* Success Checkmark Animation */}
                     <View style={styles.iconWrapper}>
@@ -99,27 +101,27 @@ const OrderSuccessScreen = () => {
                         </Animated.View>
                     </View>
 
-                    <Text style={styles.title}>Order Placed!</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: colors.text }]}>Order Placed!</Text>
+                    <Text style={[styles.subtitle, { color: colors.subText }]}>
                         Your order has been confirmed successfully.
                     </Text>
 
                     {orderId && (
-                        <View style={styles.orderIdContainer}>
+                        <View style={[styles.orderIdContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
                             <Text style={styles.orderIdLabel}>Order ID</Text>
-                            <Text style={styles.orderIdValue}>#{orderId}</Text>
+                            <Text style={[styles.orderIdValue, { color: colors.text }]}>#{orderId}</Text>
                         </View>
                     )}
                 </Animated.View>
 
                 {/* Delivery Info */}
-                <Animated.View style={[styles.detailsContainer, { opacity: fadeValue }]}>
+                <Animated.View style={[styles.detailsContainer, { opacity: fadeValue, backgroundColor: colors.card }]}>
                     <View style={styles.iconBox}>
                         <MaterialCommunityIcons name="truck-delivery-outline" size={28} color="#2874f0" />
                     </View>
                     <View style={styles.deliveryTextContainer}>
-                        <Text style={styles.estimateLabel}>Estimated Delivery</Text>
-                        <Text style={styles.estimateDate}>by {dateStr}</Text>
+                        <Text style={[styles.estimateLabel, { color: colors.subText }]}>Estimated Delivery</Text>
+                        <Text style={[styles.estimateDate, { color: colors.text }]}>by {dateStr}</Text>
                     </View>
                 </Animated.View>
 
@@ -129,8 +131,8 @@ const OrderSuccessScreen = () => {
                         <Text style={styles.primaryBtnText}>Check Order Status</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.secondaryBtn} onPress={handleContinueShopping}>
-                        <Text style={styles.secondaryBtnText}>Continue Shopping</Text>
+                    <TouchableOpacity style={[styles.secondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleContinueShopping}>
+                        <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Continue Shopping</Text>
                     </TouchableOpacity>
                 </Animated.View>
 
