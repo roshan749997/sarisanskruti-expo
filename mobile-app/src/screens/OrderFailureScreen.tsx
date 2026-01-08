@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const OrderFailureScreen = () => {
     const navigation = useNavigation<any>();
     const shakeAnimation = useRef(new Animated.Value(0)).current;
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     useEffect(() => {
         // Shake animation sequence
@@ -33,17 +35,17 @@ const OrderFailureScreen = () => {
                     </View>
                 </Animated.View>
 
-                <Text style={[styles.title, { color: colors.text }]}>Payment Failed</Text>
+                <Text style={[styles.title, { color: colors.text }]}>{t('payment_failed')}</Text>
                 <Text style={[styles.subtitle, { color: colors.subText }]}>
-                    Something went wrong with your transaction. Please try again or choose a different payment method.
+                    {t('payment_failed_msg')}
                 </Text>
 
                 <TouchableOpacity style={styles.button} onPress={handleRetry}>
-                    <Text style={styles.buttonText}>TRY AGAIN</Text>
+                    <Text style={styles.buttonText}>{t('try_again')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('MainTab', { screen: 'Cart' })}>
-                    <Text style={[styles.secondaryButtonText, { color: colors.text }]}>GO TO CART</Text>
+                    <Text style={[styles.secondaryButtonText, { color: colors.text }]}>{t('go_to_cart')}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

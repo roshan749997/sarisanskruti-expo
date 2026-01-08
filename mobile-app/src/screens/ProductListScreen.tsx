@@ -20,6 +20,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +33,7 @@ const ProductListScreen = () => {
     const { addToCart, cartCount } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     const [products, setProducts] = useState<any[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -214,8 +216,8 @@ const ProductListScreen = () => {
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={[styles.headerTitle, { color: colors.text }]}>{title || category || 'Collections'}</Text>
-                    <Text style={styles.headerSubtitle}>{filteredProducts.length} Items</Text>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>{title || (category ? t(category.replace(/-/g, '_').toLowerCase()) : t('collections'))}</Text>
+                    <Text style={styles.headerSubtitle}>{filteredProducts.length} {t('items')}</Text>
                 </View>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={{ position: 'relative' }}>
@@ -232,13 +234,13 @@ const ProductListScreen = () => {
             <View style={[styles.barContainer, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity style={styles.barButton} onPress={() => setSortModalVisible(true)}>
                     <MaterialIcons name="sort" size={20} color={colors.text} />
-                    <Text style={[styles.barText, { color: colors.text }]}>Sort</Text>
+                    <Text style={[styles.barText, { color: colors.text }]}>{t('sort')}</Text>
                     {sortOption !== 'relevant' && <View style={styles.activeDot} />}
                 </TouchableOpacity>
                 <View style={[styles.barDivider, { backgroundColor: colors.border }]} />
                 <TouchableOpacity style={styles.barButton} onPress={() => setFilterModalVisible(true)}>
                     <Ionicons name="filter-outline" size={20} color={colors.text} />
-                    <Text style={[styles.barText, { color: colors.text }]}>Filter</Text>
+                    <Text style={[styles.barText, { color: colors.text }]}>{t('filter')}</Text>
                     {(selectedPriceRanges.length > 0 || selectedFabrics.length > 0) && <View style={styles.activeDot} />}
                 </TouchableOpacity>
             </View>
@@ -260,9 +262,9 @@ const ProductListScreen = () => {
                     ListEmptyComponent={
                         <View style={styles.center}>
                             <Ionicons name="search-outline" size={48} color="#ccc" />
-                            <Text style={styles.emptyText}>No products found.</Text>
+                            <Text style={styles.emptyText}>{t('no_results')}</Text>
                             <TouchableOpacity onPress={clearFilters} style={{ marginTop: 10 }}>
-                                <Text style={{ color: '#E91E63' }}>Clear Filters</Text>
+                                <Text style={{ color: '#E91E63' }}>{t('clear_filters')}</Text>
                             </TouchableOpacity>
                         </View>
                     }
@@ -273,11 +275,11 @@ const ProductListScreen = () => {
             <Modal visible={sortModalVisible} transparent animationType="slide">
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSortModalVisible(false)}>
                     <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-                        <Text style={[styles.modalTitle, { color: colors.text }]}>Sort By</Text>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>{t('sort_by')}</Text>
                         {['relevant', 'lowToHigh', 'highToLow', 'new'].map(opt => (
                             <TouchableOpacity key={opt} style={[styles.sortOption, { borderBottomColor: colors.border }]} onPress={() => { setSortOption(opt); setSortModalVisible(false); }}>
                                 <Text style={[styles.sortText, sortOption === opt && styles.sortTextActive, { color: sortOption === opt ? '#E91E63' : colors.text }]}>
-                                    {opt === 'relevant' ? 'Relevant' : opt === 'lowToHigh' ? 'Price: Low to High' : opt === 'highToLow' ? 'Price: High to Low' : 'Newest First'}
+                                    {opt === 'relevant' ? t('sort_relevant') : opt === 'lowToHigh' ? t('sort_low_high') : opt === 'highToLow' ? t('sort_high_low') : t('sort_newest')}
                                 </Text>
                                 {sortOption === opt && <Ionicons name="checkmark" size={20} color="#E91E63" />}
                             </TouchableOpacity>
@@ -290,16 +292,16 @@ const ProductListScreen = () => {
             <Modal visible={filterModalVisible} animationType="slide" presentationStyle="pageSheet">
                 <SafeAreaView style={[styles.fullScreenModal, { backgroundColor: colors.background }]}>
                     <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-                        <Text style={[styles.modalTitle, { color: colors.text }]}>Filters</Text>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>{t('filters')}</Text>
                         <TouchableOpacity onPress={clearFilters}>
-                            <Text style={styles.resetText}>Reset</Text>
+                            <Text style={styles.resetText}>{t('reset')}</Text>
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={styles.filterScroll}>
                         {/* Price Filter */}
                         <View style={styles.filterSection}>
-                            <Text style={styles.filterTitle}>Price Range</Text>
+                            <Text style={styles.filterTitle}>{t('price_range')}</Text>
                             <View style={styles.filterTags}>
                                 {priceRanges.map(range => (
                                     <TouchableOpacity
@@ -318,7 +320,7 @@ const ProductListScreen = () => {
                         {/* Fabric Filter */}
                         {availableFabrics.length > 0 && (
                             <View style={styles.filterSection}>
-                                <Text style={styles.filterTitle}>Fabric</Text>
+                                <Text style={styles.filterTitle}>{t('fabric')}</Text>
                                 <View style={styles.filterTags}>
                                     {availableFabrics.map(fab => (
                                         <TouchableOpacity
@@ -338,7 +340,7 @@ const ProductListScreen = () => {
 
                     <View style={styles.modalFooter}>
                         <TouchableOpacity style={styles.applyBtn} onPress={() => setFilterModalVisible(false)}>
-                            <Text style={styles.applyBtnText}>Apply ({filteredProducts.length} Items)</Text>
+                            <Text style={styles.applyBtnText}>{t('apply')} ({filteredProducts.length} {t('items')})</Text>
                         </TouchableOpacity>
                     </View>
                 </SafeAreaView>

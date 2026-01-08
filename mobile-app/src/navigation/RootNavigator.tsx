@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, MainTabParamList } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -34,6 +36,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const MainTabs = () => {
     const insets = useSafeAreaInsets();
     const { cart } = useCart();
+    const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     return (
         <Tab.Navigator
@@ -48,25 +52,25 @@ const MainTabs = () => {
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#D4AF37', // Gold-ish for Saree Sanskruti
-                tabBarInactiveTintColor: 'gray',
+                tabBarInactiveTintColor: darkMode ? '#999' : 'gray',
                 tabBarStyle: {
-                    backgroundColor: '#fff',
+                    backgroundColor: colors.card,
                     borderTopWidth: 1,
-                    borderTopColor: '#e5e5e5',
+                    borderTopColor: colors.border,
                     paddingBottom: Math.max(insets.bottom, 10),
                     paddingTop: 8,
                     height: 60 + Math.max(insets.bottom, 10),
                 },
             })}
         >
-            <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Shop" component={ShopScreen} />
+            <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('home') }} />
+            <Tab.Screen name="Shop" component={ShopScreen} options={{ title: t('shop') }} />
             <Tab.Screen
                 name="Cart"
                 component={CartScreen}
-                options={{ tabBarBadge: cart.length > 0 ? cart.length : undefined }}
+                options={{ title: t('cart'), tabBarBadge: cart.length > 0 ? cart.length : undefined }}
             />
-            <Tab.Screen name="Profile" component={ProfileScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile') }} />
         </Tab.Navigator>
     );
 };

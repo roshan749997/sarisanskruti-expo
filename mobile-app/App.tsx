@@ -8,6 +8,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
 import { ThemeProvider } from './src/context/ThemeContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 import AnimatedSplash from './src/components/AnimatedSplash';
 
 // Keep the splash screen visible while we fetch resources
@@ -53,17 +54,19 @@ const App: React.FC = () => {
         <SafeAreaProvider>
             <ThemeProvider>
                 <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-                    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+                    {/* StatusBar is handled in ThemeProvider */}
                     {showSplash ? (
                         <AnimatedSplash onAnimationComplete={handleAnimationComplete} />
                     ) : (
                         <NavigationContainer>
                             <AuthProvider>
-                                <WishlistProvider>
-                                    <CartProvider>
-                                        <RootNavigator />
-                                    </CartProvider>
-                                </WishlistProvider>
+                                <LanguageProvider>
+                                    <WishlistProvider>
+                                        <CartProvider>
+                                            <RootNavigator />
+                                        </CartProvider>
+                                    </WishlistProvider>
+                                </LanguageProvider>
                             </AuthProvider>
                         </NavigationContainer>
                     )}

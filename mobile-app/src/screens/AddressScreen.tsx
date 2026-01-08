@@ -18,6 +18,7 @@ import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ const AddressScreen = () => {
     const insets = useSafeAreaInsets();
     const { cart, cartTotal, loading: cartLoading, clearCart } = useCart();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     // State
     const [loading, setLoading] = useState(false);
@@ -188,7 +190,7 @@ const AddressScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Review Order</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('review_order')}</Text>
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 115 }} showsVerticalScrollIndicator={false}>
@@ -196,10 +198,10 @@ const AddressScreen = () => {
                 {/* Step 1: Address */}
                 <View style={styles.sectionHeader}>
                     <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>1</Text></View>
-                    <Text style={styles.sectionTitle}>Delivery Address</Text>
+                    <Text style={styles.sectionTitle}>{t('delivery_address')}</Text>
                     {address && !isEditing && (
                         <TouchableOpacity onPress={() => setIsEditing(true)}>
-                            <Text style={styles.changeBtnText}>CHANGE</Text>
+                            <Text style={styles.changeBtnText}>{t('change')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -220,55 +222,55 @@ const AddressScreen = () => {
                         </View>
                     ) : (
                         <View>
-                            <Text style={[styles.formContextTitle, { color: colors.text }]}>{address ? 'Edit Address' : 'Add New Address'}</Text>
+                            <Text style={[styles.formContextTitle, { color: colors.text }]}>{address ? t('edit_address') : t('add_new_address')}</Text>
 
-                            {renderInput('Full Name', 'fullName', 'Enter Name')}
-                            {renderInput('Mobile Number', 'mobileNumber', '10-digit number', 'phone-pad')}
-
-                            <View style={styles.twoCol}>
-                                <View style={{ flex: 1, marginRight: 8 }}>{renderInput('Pincode', 'pincode', 'Pincode', 'numeric')}</View>
-                                <View style={{ flex: 1 }}>{renderInput('Locality', 'locality', 'Locality')}</View>
-                            </View>
-
-                            {renderInput('Address (House No, Building, Street)', 'address', 'Address', 'default', true)}
+                            {renderInput(t('full_name'), 'fullName', t('enter_name'))}
+                            {renderInput(t('phone_label'), 'mobileNumber', t('phone_hint'), 'phone-pad')}
 
                             <View style={styles.twoCol}>
-                                <View style={{ flex: 1, marginRight: 8 }}>{renderInput('City', 'city', 'City')}</View>
-                                <View style={{ flex: 1 }}>{renderInput('State', 'state', 'State')}</View>
+                                <View style={{ flex: 1, marginRight: 8 }}>{renderInput(t('pincode'), 'pincode', t('pincode'), 'numeric')}</View>
+                                <View style={{ flex: 1 }}>{renderInput(t('locality'), 'locality', t('locality'))}</View>
                             </View>
 
-                            {renderInput('Landmark (Optional)', 'landmark', 'Landmark')}
-                            {renderInput('Alternate Phone (Optional)', 'alternatePhone', 'Phone', 'phone-pad')}
+                            {renderInput(t('address'), 'address', t('address'), 'default', true)}
 
-                            <Text style={[styles.label, { color: colors.subText }]}>Address Type</Text>
+                            <View style={styles.twoCol}>
+                                <View style={{ flex: 1, marginRight: 8 }}>{renderInput(t('city'), 'city', t('city'))}</View>
+                                <View style={{ flex: 1 }}>{renderInput(t('state'), 'state', t('state'))}</View>
+                            </View>
+
+                            {renderInput(`${t('landmark')} ${t('optional')}`, 'landmark', t('landmark'))}
+                            {renderInput(`${t('phone_label')} 2 ${t('optional')}`, 'alternatePhone', t('phone_hint'), 'phone-pad')}
+
+                            <Text style={[styles.label, { color: colors.subText }]}>{t('address_type') || 'Address Type'}</Text>
                             <View style={styles.radioGroup}>
                                 <TouchableOpacity
                                     style={[styles.typeBtn, { borderColor: colors.border }, formData.addressType === 'Home' && styles.typeBtnSelected]}
                                     onPress={() => setFormData({ ...formData, addressType: 'Home' })}
                                 >
-                                    <Text style={[styles.typeBtnText, { color: colors.subText }, formData.addressType === 'Home' && { color: colors.text }]}>Home</Text>
+                                    <Text style={[styles.typeBtnText, { color: colors.subText }, formData.addressType === 'Home' && { color: colors.text }]}>{t('address_type_home')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.typeBtn, { borderColor: colors.border }, formData.addressType === 'Work' && styles.typeBtnSelected]}
                                     onPress={() => setFormData({ ...formData, addressType: 'Work' })}
                                 >
-                                    <Text style={[styles.typeBtnText, { color: colors.subText }, formData.addressType === 'Work' && { color: colors.text }]}>Work</Text>
+                                    <Text style={[styles.typeBtnText, { color: colors.subText }, formData.addressType === 'Work' && { color: colors.text }]}>{t('address_type_work')}</Text>
                                 </TouchableOpacity>
                             </View>
 
                             <View style={styles.formFooter}>
                                 <TouchableOpacity style={styles.saveBtn} onPress={handleSaveAddress} disabled={processing}>
-                                    {processing ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>SAVE ADDRESS</Text>}
+                                    {processing ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{t('save_address')}</Text>}
                                 </TouchableOpacity>
                                 {address && (
                                     <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditing(false)}>
-                                        <Text style={styles.cancelBtnText}>CANCEL</Text>
+                                        <Text style={styles.cancelBtnText}>{t('cancel')}</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
                             {address && (
                                 <TouchableOpacity style={styles.deleteLink} onPress={handleDeleteAddress}>
-                                    <Text style={styles.deleteLinkText}>Delete this address</Text>
+                                    <Text style={styles.deleteLinkText}>{t('delete_address')}</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -278,16 +280,16 @@ const AddressScreen = () => {
                 {/* Step 2: Order Summary */}
                 <View style={[styles.sectionHeader, { marginTop: 20 }]}>
                     <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>2</Text></View>
-                    <Text style={styles.sectionTitle}>Order Summary</Text>
+                    <Text style={styles.sectionTitle}>{t('order_summary')}</Text>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card }]}>
                     <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, { color: colors.subText }]}>Total Items</Text>
+                        <Text style={[styles.summaryLabel, { color: colors.subText }]}>{t('total_items')}</Text>
                         <Text style={[styles.summaryValue, { color: colors.text }]}>{cart.length}</Text>
                     </View>
                     <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, { color: colors.subText }]}>Total Price</Text>
+                        <Text style={[styles.summaryLabel, { color: colors.subText }]}>{t('total_price')}</Text>
                         <Text style={[styles.summaryValue, { color: colors.text }]}>₹{totalPayable.toLocaleString()}</Text>
                     </View>
                 </View>
@@ -295,7 +297,7 @@ const AddressScreen = () => {
                 {/* Step 3: Payment */}
                 <View style={[styles.sectionHeader, { marginTop: 20 }]}>
                     <View style={styles.stepBadge}><Text style={styles.stepBadgeText}>3</Text></View>
-                    <Text style={styles.sectionTitle}>Payment Options</Text>
+                    <Text style={styles.sectionTitle}>{t('payment_options')}</Text>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -308,7 +310,7 @@ const AddressScreen = () => {
                         </View>
                         <View style={styles.paymentContent}>
                             <Text style={[styles.paymentName, { color: colors.text }]}>UPI / Credit / Debit / NetBanking</Text>
-                            <Text style={[styles.paymentDesc, { color: colors.subText }]}>Pay securely via PayU</Text>
+                            <Text style={[styles.paymentDesc, { color: colors.subText }]}>{t('payu_desc')}</Text>
                         </View>
                         <FontAwesome5 name="cc-visa" size={20} color={colors.text} style={{ marginRight: 5 }} />
                         <FontAwesome5 name="cc-mastercard" size={20} color={colors.text} />
@@ -324,8 +326,8 @@ const AddressScreen = () => {
                             {paymentMethod === 'cod' && <View style={[styles.radioInner, { backgroundColor: colors.text }]} />}
                         </View>
                         <View style={styles.paymentContent}>
-                            <Text style={[styles.paymentName, { color: colors.text }]}>Cash on Delivery</Text>
-                            <Text style={[styles.paymentDesc, { color: colors.subText }]}>Pay when you receive the order</Text>
+                            <Text style={[styles.paymentName, { color: colors.text }]}>{t('cod_label')}</Text>
+                            <Text style={[styles.paymentDesc, { color: colors.subText }]}>{t('cod_desc')}</Text>
                         </View>
                         <MaterialIcons name="money" size={24} color={colors.text} />
                     </TouchableOpacity>
@@ -333,24 +335,24 @@ const AddressScreen = () => {
 
                 {/* Price Details Summary for Final Check */}
                 <View style={[styles.billCard, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.billTitle, { color: colors.subText }]}>Price Details</Text>
+                    <Text style={[styles.billTitle, { color: colors.subText }]}>{t('price_details')}</Text>
                     <View style={styles.billRow}>
-                        <Text style={[styles.billLabel, { color: colors.text }]}>Price ({cart.length} items)</Text>
+                        <Text style={[styles.billLabel, { color: colors.text }]}>{t('price')} ({cart.length} {t('items')})</Text>
                         <Text style={[styles.billValue, { color: colors.text }]}>₹{subtotal.toLocaleString()}</Text>
                     </View>
                     <View style={styles.billRow}>
-                        <Text style={[styles.billLabel, { color: colors.text }]}>Delivery Charges</Text>
+                        <Text style={[styles.billLabel, { color: colors.text }]}>{t('shipping_fee')}</Text>
                         <Text style={[styles.billValue, shippingCharge === 0 && { color: 'green' }]}>
-                            {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
+                            {shippingCharge === 0 ? t('free') : `₹${shippingCharge}`}
                         </Text>
                     </View>
                     <View style={styles.billRow}>
-                        <Text style={[styles.billLabel, { color: colors.text }]}>Tax (5%)</Text>
+                        <Text style={[styles.billLabel, { color: colors.text }]}>{t('tax_label')} (5%)</Text>
                         <Text style={[styles.billValue, { color: colors.text }]}>+ ₹{tax.toLocaleString()}</Text>
                     </View>
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />
                     <View style={styles.billTotalRow}>
-                        <Text style={[styles.billTotalLabel, { color: colors.text }]}>Amount Payable</Text>
+                        <Text style={[styles.billTotalLabel, { color: colors.text }]}>{t('total_amount')}</Text>
                         <Text style={[styles.billTotalValue, { color: colors.text }]}>₹{totalPayable.toLocaleString()}</Text>
                     </View>
                 </View>
@@ -360,7 +362,7 @@ const AddressScreen = () => {
             {/* Bottom Bar */}
             <View style={[styles.bottomBar, { paddingBottom: Math.max(12, insets.bottom + 12), backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <View style={styles.bottomTotal}>
-                    <Text style={styles.bottomTotalLabel}>{cart.length} items</Text>
+                    <Text style={styles.bottomTotalLabel}>{cart.length} {t('items')}</Text>
                     <Text style={[styles.bottomTotalValue, { color: colors.text }]}>₹{totalPayable.toLocaleString()}</Text>
                 </View>
                 <TouchableOpacity
@@ -371,7 +373,7 @@ const AddressScreen = () => {
                     {processing ? (
                         <ActivityIndicator color="#fff" />
                     ) : (
-                        <Text style={styles.placeOrderText}>PLACE ORDER</Text>
+                        <Text style={styles.placeOrderText}>{t('place_order')}</Text>
                     )}
                 </TouchableOpacity>
             </View>

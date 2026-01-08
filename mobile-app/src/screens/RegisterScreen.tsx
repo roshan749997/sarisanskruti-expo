@@ -15,11 +15,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
   const { colors, darkMode } = useTheme();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -52,22 +54,22 @@ const RegisterScreen = () => {
   const handleSendOTP = async () => {
     // Validate form fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      setError('Please fill in all required fields');
+      setError(t('fill_all_fields'));
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('passwords_no_match'));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('password_short'));
       return;
     }
 
     if (!formData.agreeToTerms) {
-      setError('Please agree to the terms and conditions');
+      setError(t('agree_terms_err'));
       return;
     }
 
@@ -89,7 +91,7 @@ const RegisterScreen = () => {
         },
       });
 
-      setSuccess('OTP sent to your phone number');
+      setSuccess(t('otp_sent'));
       setOtpSent(true);
       setOtpTimer(60);
     } catch (err: any) {
@@ -109,12 +111,12 @@ const RegisterScreen = () => {
     }
 
     if (!formData.otp) {
-      setError('Please enter the OTP');
+      setError(t('otp_placeholder'));
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('passwords_no_match'));
       return;
     }
 
@@ -160,7 +162,7 @@ const RegisterScreen = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('register_title')}</Text>
             <Text style={[styles.subtitle, { color: colors.subText }]}>Join us to discover stylish kurtas and kurtis with exclusive offers</Text>
           </View>
 
@@ -171,20 +173,20 @@ const RegisterScreen = () => {
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>First Name</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>{t('first_name')}</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder="First name"
+                  placeholder={t('first_name')}
                   placeholderTextColor={colors.subText}
                   value={formData.firstName}
                   onChangeText={(text) => setFormData({ ...formData, firstName: text })}
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>Last Name</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>{t('last_name')}</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder="Last name"
+                  placeholder={t('last_name')}
                   placeholderTextColor={colors.subText}
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({ ...formData, lastName: text })}
@@ -193,10 +195,10 @@ const RegisterScreen = () => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
+              <Text style={[styles.label, { color: colors.subText }]}>{t('email_label')}</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                placeholder="Enter your email"
+                placeholder={t('email_placeholder')}
                 placeholderTextColor={colors.subText}
                 value={formData.email}
                 onChangeText={(text) => setFormData({ ...formData, email: text })}
@@ -206,10 +208,10 @@ const RegisterScreen = () => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.subText }]}>Phone Number</Text>
+              <Text style={[styles.label, { color: colors.subText }]}>{t('phone_label')}</Text>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                placeholder="Enter your 10-digit phone number"
+                placeholder={t('phone_placeholder')}
                 placeholderTextColor={colors.subText}
                 value={formData.phone}
                 onChangeText={(text) => setFormData({ ...formData, phone: text })}
@@ -218,16 +220,16 @@ const RegisterScreen = () => {
                 editable={!otpSent}
               />
               {otpSent && (
-                <Text style={styles.otpSentText}>✓ OTP sent to this number</Text>
+                <Text style={styles.otpSentText}>✓ {t('otp_sent')}</Text>
               )}
             </View>
 
             {otpSent && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.subText }]}>Enter OTP</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>{t('otp_placeholder')}</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder="Enter 6-digit OTP"
+                  placeholder={t('otp_placeholder')}
                   placeholderTextColor={colors.subText}
                   value={formData.otp}
                   onChangeText={(text) => setFormData({ ...formData, otp: text })}
@@ -242,10 +244,10 @@ const RegisterScreen = () => {
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>Password</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>{t('password_label')}</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder="Create password"
+                  placeholder={t('password_placeholder')}
                   placeholderTextColor={colors.subText}
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -253,10 +255,10 @@ const RegisterScreen = () => {
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>Confirm Password</Text>
+                <Text style={[styles.label, { color: colors.subText }]}>{t('confirm_password')}</Text>
                 <TextInput
                   style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder="Confirm password"
+                  placeholder={t('confirm_password')}
                   placeholderTextColor={colors.subText}
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
@@ -273,7 +275,7 @@ const RegisterScreen = () => {
                 {formData.agreeToTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>
-                I agree to the <Text style={styles.linkInline}>Terms of Service</Text> and <Text style={styles.linkInline}>Privacy Policy</Text>
+                {t('agree_terms')}
               </Text>
             </TouchableOpacity>
 
@@ -286,7 +288,7 @@ const RegisterScreen = () => {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Send OTP</Text>
+                  <Text style={styles.primaryButtonText}>{t('send_otp')}</Text>
                 )}
               </TouchableOpacity>
             ) : (
@@ -299,7 +301,7 @@ const RegisterScreen = () => {
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.primaryButtonText}>Create Account</Text>
+                    <Text style={styles.primaryButtonText}>{t('register_title')}</Text>
                   )}
                 </TouchableOpacity>
                 {otpTimer === 0 && (
@@ -308,16 +310,16 @@ const RegisterScreen = () => {
                     onPress={handleSendOTP}
                     disabled={loading}
                   >
-                    <Text style={styles.secondaryButtonText}>Resend OTP</Text>
+                    <Text style={styles.secondaryButtonText}>{t('resend_otp')}</Text>
                   </TouchableOpacity>
                 )}
               </>
             )}
 
             <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: colors.subText }]}>Already have an account? </Text>
+              <Text style={[styles.footerText, { color: colors.subText }]}>{t('already_have_account')} </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.linkText}>Sign in here</Text>
+                <Text style={styles.linkText}>{t('login_title')}</Text>
               </TouchableOpacity>
             </View>
           </View>

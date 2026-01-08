@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -25,12 +26,13 @@ const CartScreen = () => {
     const { cart, removeFromCart, updateQuantity, clearCart, cartTotal, loading } = useCart();
     const { user } = useAuth();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     const handleQuantityChange = (itemId: string, newQty: number) => {
         if (newQty < 1) {
-            Alert.alert('Remove Item', 'Do you want to remove this item from your cart?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Remove', onPress: () => removeFromCart(itemId), style: 'destructive' }
+            Alert.alert(t('remove_item'), t('remove_item_msg'), [
+                { text: t('cancel'), style: 'cancel' },
+                { text: t('remove'), onPress: () => removeFromCart(itemId), style: 'destructive' }
             ]);
         } else {
             updateQuantity(itemId, newQty);
@@ -38,9 +40,9 @@ const CartScreen = () => {
     };
 
     const confirmRemove = (itemId: string) => {
-        Alert.alert('Remove Item', 'Do you want to remove this item from your cart?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Remove', onPress: () => removeFromCart(itemId), style: 'destructive' }
+        Alert.alert(t('remove_item'), t('remove_item_msg'), [
+            { text: t('cancel'), style: 'cancel' },
+            { text: t('remove'), onPress: () => removeFromCart(itemId), style: 'destructive' }
         ]);
     };
 
@@ -58,21 +60,21 @@ const CartScreen = () => {
                 <View style={[styles.stepCircle, styles.stepActive]}>
                     <Ionicons name="cart" size={16} color="#fff" />
                 </View>
-                <Text style={[styles.stepText, styles.stepTextActive]}>Cart</Text>
+                <Text style={[styles.stepText, styles.stepTextActive]}>{t('step_cart')}</Text>
             </View>
             <View style={[styles.stepLine, styles.stepLineActive]} />
             <View style={styles.step}>
                 <View style={[styles.stepCircle, styles.stepInactive]}>
                     <Text style={styles.stepNumber}>2</Text>
                 </View>
-                <Text style={[styles.stepText, styles.stepTextInactive]}>Address</Text>
+                <Text style={[styles.stepText, styles.stepTextInactive]}>{t('step_address')}</Text>
             </View>
             <View style={[styles.stepLine, styles.stepLineInactive]} />
             <View style={styles.step}>
                 <View style={[styles.stepCircle, styles.stepInactive]}>
                     <Text style={styles.stepNumber}>3</Text>
                 </View>
-                <Text style={[styles.stepText, styles.stepTextInactive]}>Payment</Text>
+                <Text style={[styles.stepText, styles.stepTextInactive]}>{t('step_payment')}</Text>
             </View>
         </View>
     );
@@ -92,18 +94,18 @@ const CartScreen = () => {
                     </View>
                     <View style={styles.detailsContainer}>
                         <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
-                        <Text style={[styles.itemSubtitle, { color: colors.subText }]}>{item.color || 'Multicolor'} {item.size ? `| Size: ${item.size}` : ''}</Text>
+                        <Text style={[styles.itemSubtitle, { color: colors.subText }]}>{item.color || 'Multicolor'} {item.size ? `| ${t('size')}: ${item.size}` : ''}</Text>
 
                         <View style={styles.priceRow}>
                             <Text style={[styles.sellingPrice, { color: colors.text }]}>₹{itemPrice.toLocaleString()}</Text>
                             {discountPercentage > 0 && (
                                 <>
                                     <Text style={styles.mrpPrice}>₹{itemMRP.toLocaleString()}</Text>
-                                    <Text style={styles.discountText}>{discountPercentage}% Off</Text>
+                                    <Text style={styles.discountText}>{discountPercentage}% {t('discount_off')}</Text>
                                 </>
                             )}
                         </View>
-                        <Text style={styles.deliveryText}>Delivery by {new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} | <Text style={{ color: '#009688' }}>FREE</Text></Text>
+                        <Text style={styles.deliveryText}>{t('delivery_by')} {new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} | <Text style={{ color: '#009688' }}>{t('free')}</Text></Text>
                     </View>
                 </View>
 
@@ -130,7 +132,7 @@ const CartScreen = () => {
                     </View>
                     <TouchableOpacity style={styles.removeBtn} onPress={() => confirmRemove(item.id)}>
                         <Ionicons name="trash-outline" size={18} color="#666" />
-                        <Text style={styles.removeText}>Remove</Text>
+                        <Text style={styles.removeText}>{t('remove')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -147,10 +149,10 @@ const CartScreen = () => {
                         style={styles.emptyImage}
                         resizeMode="contain"
                     />
-                    <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
-                    <Text style={styles.emptySubtitle}>Looks like you haven't added anything to your cart yet.</Text>
+                    <Text style={styles.emptyTitle}>{t('empty_cart')}</Text>
+                    <Text style={styles.emptySubtitle}>{t('empty_cart_msg')}</Text>
                     <TouchableOpacity style={styles.shopNowBtn} onPress={() => navigation.navigate('Home')}>
-                        <Text style={styles.shopNowText}>Start Shopping</Text>
+                        <Text style={styles.shopNowText}>{t('start_shopping')}</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -164,7 +166,7 @@ const CartScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>My Cart ({cart.length})</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('cart_title')} ({cart.length})</Text>
             </View>
 
             <StepIndicator />
@@ -173,7 +175,7 @@ const CartScreen = () => {
                 {/* Delivery Bar */}
                 {cartTotal < 1000 && (
                     <View style={styles.deliveryBar}>
-                        <Text style={styles.deliveryBarText}>Add items worth <Text style={{ fontWeight: 'bold' }}>₹{1000 - cartTotal}</Text> for <Text style={{ color: '#009688', fontWeight: 'bold' }}>FREE Delivery</Text></Text>
+                        <Text style={styles.deliveryBarText}>{t('add_items_worth')}<Text style={{ fontWeight: 'bold' }}>₹{1000 - cartTotal}</Text>{t('for_free_delivery')}</Text>
                     </View>
                 )}
 
@@ -184,29 +186,29 @@ const CartScreen = () => {
 
                 {/* Price Details */}
                 <View style={[styles.priceDetailsCard, { backgroundColor: colors.card }]}>
-                    <Text style={styles.priceTitle}>Price Details ({cart.length} items)</Text>
+                    <Text style={styles.priceTitle}>{t('price_details')} ({cart.length} items)</Text>
                     <View style={styles.priceRowDetails}>
-                        <Text style={[styles.priceLabel, { color: colors.text }]}>Total MRP</Text>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>{t('total_mrp')}</Text>
                         <Text style={[styles.priceValue, { color: colors.text }]}>₹{totalMRP.toLocaleString()}</Text>
                     </View>
                     <View style={styles.priceRowDetails}>
-                        <Text style={[styles.priceLabel, { color: colors.text }]}>Discount on MRP</Text>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>{t('discount_on_mrp')}</Text>
                         <Text style={[styles.priceValue, styles.greenText]}>-₹{totalDiscount.toLocaleString()}</Text>
                     </View>
                     <View style={styles.priceRowDetails}>
-                        <Text style={[styles.priceLabel, { color: colors.text }]}>Shipping Fee</Text>
+                        <Text style={[styles.priceLabel, { color: colors.text }]}>{t('shipping_fee')}</Text>
                         <Text style={[styles.priceValue, shippingCost === 0 ? styles.greenText : { color: colors.text }]}>
-                            {shippingCost === 0 ? 'FREE' : `₹${shippingCost}`}
+                            {shippingCost === 0 ? t('free') : `₹${shippingCost}`}
                         </Text>
                     </View>
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />
                     <View style={styles.totalRow}>
-                        <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount</Text>
+                        <Text style={[styles.totalLabel, { color: colors.text }]}>{t('total_amount')}</Text>
                         <Text style={[styles.totalValue, { color: colors.text }]}>₹{finalAmount.toLocaleString()}</Text>
                     </View>
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />
                     <View style={styles.savingsContainer}>
-                        <Text style={styles.savingsText}>You will save ₹{totalDiscount.toLocaleString()} on this order</Text>
+                        <Text style={styles.savingsText}>{t('you_save')}{totalDiscount.toLocaleString()}{t('on_order')}</Text>
                     </View>
                 </View>
 
@@ -214,15 +216,15 @@ const CartScreen = () => {
                 <View style={styles.trustContainer}>
                     <View style={styles.trustItem}>
                         <MaterialCommunityIcons name="shield-check-outline" size={24} color="#666" />
-                        <Text style={styles.trustText}>100% Secure Payments</Text>
+                        <Text style={styles.trustText}>{t('secure_payments')}</Text>
                     </View>
                     <View style={styles.trustItem}>
                         <MaterialCommunityIcons name="cached" size={24} color="#666" />
-                        <Text style={styles.trustText}>Easy Returns</Text>
+                        <Text style={styles.trustText}>{t('easy_returns')}</Text>
                     </View>
                     <View style={styles.trustItem}>
                         <MaterialCommunityIcons name="check-decagram-outline" size={24} color="#666" />
-                        <Text style={styles.trustText}>Authentic Products</Text>
+                        <Text style={styles.trustText}>{t('authentic_products')}</Text>
                     </View>
                 </View>
 
@@ -232,14 +234,14 @@ const CartScreen = () => {
             {/* Sticky Bottom Bar */}
             <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <View>
-                    <Text style={styles.bottomTotalLabel}>Total Amount</Text>
+                    <Text style={styles.bottomTotalLabel}>{t('total_amount')}</Text>
                     <Text style={[styles.bottomTotalValue, { color: colors.text }]}>₹{finalAmount.toLocaleString()}</Text>
                 </View>
                 <TouchableOpacity
                     style={styles.placeOrderBtn}
                     onPress={() => navigation.navigate('Address')} // Assuming Address screen exists
                 >
-                    <Text style={styles.placeOrderText}>Place Order</Text>
+                    <Text style={styles.placeOrderText}>{t('place_order')}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

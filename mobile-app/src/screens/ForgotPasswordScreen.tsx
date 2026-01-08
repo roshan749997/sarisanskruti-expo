@@ -16,10 +16,12 @@ import { api } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const ForgotPasswordScreen = () => {
     const navigation = useNavigation<any>();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -47,10 +49,10 @@ const ForgotPasswordScreen = () => {
                 <View style={[styles.container, { backgroundColor: colors.background }]}>
                     <View style={styles.center}>
                         <Ionicons name="checkmark-circle-outline" size={80} color="green" />
-                        <Text style={[styles.successTitle, { color: colors.text }]}>Check your email</Text>
-                        <Text style={[styles.successText, { color: colors.subText }]}>We have sent a password reset link to {email}</Text>
+                        <Text style={[styles.successTitle, { color: colors.text }]}>{t('check_email')}</Text>
+                        <Text style={[styles.successText, { color: colors.subText }]}>{t('reset_link_sent_msg')} {email}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
-                            <Text style={styles.buttonText}>Back to Login</Text>
+                            <Text style={styles.buttonText}>{t('back_to_login')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -72,14 +74,14 @@ const ForgotPasswordScreen = () => {
                     </View>
 
                     <View style={styles.content}>
-                        <Text style={[styles.title, { color: colors.text }]}>Forgot Password?</Text>
-                        <Text style={[styles.subtitle, { color: colors.subText }]}>Don't worry! It happens. Please enter the email associated with your account.</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('forgot_password')}</Text>
+                        <Text style={[styles.subtitle, { color: colors.subText }]}>{t('forgot_password_subtitle')}</Text>
 
                         <View style={styles.inputContainer}>
-                            <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
+                            <Text style={[styles.label, { color: colors.subText }]}>{t('email_label')}</Text>
                             <TextInput
                                 style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                                placeholder="Enter your email"
+                                placeholder={t('email_placeholder')}
                                 placeholderTextColor={colors.subText}
                                 value={email}
                                 onChangeText={setEmail}
@@ -96,7 +98,7 @@ const ForgotPasswordScreen = () => {
                             {loading ? (
                                 <ActivityIndicator color="#fff" />
                             ) : (
-                                <Text style={styles.buttonText}>Send Reset Link</Text>
+                                <Text style={styles.buttonText}>{t('send_reset_link')}</Text>
                             )}
                         </TouchableOpacity>
                     </View>

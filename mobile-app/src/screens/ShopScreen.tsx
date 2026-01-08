@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 const SPACING = 12;
@@ -27,47 +28,48 @@ const ShopScreen = () => {
     const navigation = useNavigation<any>();
     const scrollX = useRef(new Animated.Value(0)).current;
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     // Split categories for better layout
     const topCategories = [
-        { name: 'Men', path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', highlight: true },
-        { name: 'Women', path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', highlight: true },
-        { name: 'Boys', path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png' },
-        { name: 'Girls', path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png' },
-        { name: 'Sishu', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png' },
+        { name: t('men'), path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', highlight: true },
+        { name: t('women'), path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', highlight: true },
+        { name: t('boys'), path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png' },
+        { name: t('girls'), path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png' },
+        { name: t('sishu'), path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png' },
     ];
 
     const collections = [
-        { name: 'All Collection', path: 'ProductList', params: { category: 'Collection' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156521/faaed640-0829-4861-80a2-6c7dc3e73bf3.png', desc: 'Explore All' },
-        { name: 'Men', path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', desc: 'Ethnic Wear', badge: 'NEW' },
-        { name: 'Women', path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', desc: 'Latest Trends', badge: 'HOT' },
-        { name: 'Boys', path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png', desc: 'Kids Fashion' },
-        { name: 'Girls', path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png', desc: 'Kids Fashion' },
-        { name: 'Sishu', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png', desc: 'Toddlers' },
-        { name: 'Silk Sarees', path: 'ProductList', params: { category: 'silk' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Pure Elegance', badge: 'CLASSIC' },
-        { name: 'Cotton Sarees', path: 'ProductList', params: { category: 'cotton' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Comfort Wrap', badge: 'SUMMER' },
-        { name: 'Regional Sarees', path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Traditional', badge: 'BESTSELLER' },
-        { name: 'Banarasi Silk', path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Premium Silk', badge: 'PREMIUM' },
-        { name: 'Designer Sarees', path: 'ProductList', params: { category: 'designer-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg', desc: 'Exclusive' },
-        { name: 'Printed Sarees', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png', desc: 'Daily Wear', badge: 'SALE' },
+        { name: t('all_collection'), path: 'ProductList', params: { category: 'Collection' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156521/faaed640-0829-4861-80a2-6c7dc3e73bf3.png', desc: t('view_all') },
+        { name: t('men'), path: 'ProductList', params: { category: 'Men' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764154213/0bf2018a-4136-4d0d-99bc-2c5755a65d2c.png', desc: 'Ethnic Wear', badge: 'NEW' },
+        { name: t('women'), path: 'ProductList', params: { category: 'Women' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png', desc: 'Latest Trends', badge: 'HOT' },
+        { name: t('boys'), path: 'ProductList', params: { category: 'Boys' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156074/0b700582-a664-43e6-b478-39ced3c3c6db.png', desc: 'Kids Fashion' },
+        { name: t('girls'), path: 'ProductList', params: { category: 'Girls' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156159/1157977a-db19-4e4e-988c-51c7f8d501ae.png', desc: 'Kids Fashion' },
+        { name: t('sishu'), path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png', desc: 'Toddlers' },
+        { name: t('silk_sarees'), path: 'ProductList', params: { category: 'silk' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Pure Elegance', badge: 'CLASSIC' },
+        { name: t('cotton_sarees'), path: 'ProductList', params: { category: 'cotton' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Comfort Wrap', badge: 'SUMMER' },
+        { name: t('regional_sarees'), path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png', desc: 'Traditional', badge: 'BESTSELLER' },
+        { name: t('banarasi_silk'), path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png', desc: 'Premium Silk', badge: 'PREMIUM' },
+        { name: t('designer_sarees'), path: 'ProductList', params: { category: 'designer-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg', desc: 'Exclusive' },
+        { name: t('printed_sarees'), path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png', desc: 'Daily Wear', badge: 'SALE' },
     ];
 
     const banners = [
         {
             id: '1',
             image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png',
-            tag: 'NEW ARRIVALS',
-            title: 'Wedding Collection',
-            btn: 'Shop Now',
+            tag: 'NEW ARRIVALS', // Keep or map
+            title: t('wedding_sarees'),
+            btn: t('buy_now'),
             path: 'ProductList',
             params: { category: 'banarasi' }
         },
         {
             id: '2',
             image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg',
-            tag: 'SALE LIVE',
-            title: 'Designer Sarees',
-            btn: 'View Offers',
+            tag: 'SALE LIVE', // Keep
+            title: t('designer_sarees'),
+            btn: t('view_all'),
             path: 'ProductList',
             params: { category: 'designer-sarees' }
         }
@@ -77,7 +79,7 @@ const ShopScreen = () => {
         <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
             <TouchableOpacity style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate('Search')}>
                 <Ionicons name="search" size={20} color={colors.subText} style={{ marginRight: 10 }} />
-                <Text style={[styles.searchText, { color: colors.subText }]}>Search for products...</Text>
+                <Text style={[styles.searchText, { color: colors.subText }]}>{t('search_hint')}</Text>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity style={styles.iconBtn}>
                     <Ionicons name="mic-outline" size={20} color={colors.subText} />
@@ -201,7 +203,7 @@ const ShopScreen = () => {
                         <TopCategories />
                         <BannerCarousel />
                         <View style={styles.sectionHeader}>
-                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Curated Collections</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('curated_collections')}</Text>
                             <MaterialCommunityIcons name="sort-variant" size={20} color={colors.subText} />
                         </View>
                     </View>

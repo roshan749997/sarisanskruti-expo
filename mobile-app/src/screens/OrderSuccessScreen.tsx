@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -11,6 +12,7 @@ const OrderSuccessScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
     const fadeValue = useRef(new Animated.Value(0)).current;
 
     // Animation refs for Checkmark
@@ -101,14 +103,14 @@ const OrderSuccessScreen = () => {
                         </Animated.View>
                     </View>
 
-                    <Text style={[styles.title, { color: colors.text }]}>Order Placed!</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>{t('order_placed')}</Text>
                     <Text style={[styles.subtitle, { color: colors.subText }]}>
-                        Your order has been confirmed successfully.
+                        {t('order_confirmed_msg')}
                     </Text>
 
                     {orderId && (
                         <View style={[styles.orderIdContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                            <Text style={styles.orderIdLabel}>Order ID</Text>
+                            <Text style={styles.orderIdLabel}>{t('order_id')}</Text>
                             <Text style={[styles.orderIdValue, { color: colors.text }]}>#{orderId}</Text>
                         </View>
                     )}
@@ -120,19 +122,19 @@ const OrderSuccessScreen = () => {
                         <MaterialCommunityIcons name="truck-delivery-outline" size={28} color="#2874f0" />
                     </View>
                     <View style={styles.deliveryTextContainer}>
-                        <Text style={[styles.estimateLabel, { color: colors.subText }]}>Estimated Delivery</Text>
-                        <Text style={[styles.estimateDate, { color: colors.text }]}>by {dateStr}</Text>
+                        <Text style={[styles.estimateLabel, { color: colors.subText }]}>{t('estimated_delivery')}</Text>
+                        <Text style={[styles.estimateDate, { color: colors.text }]}>{t('delivery_by') || 'by'} {dateStr}</Text>
                     </View>
                 </Animated.View>
 
                 {/* Actions */}
                 <Animated.View style={[styles.actions, { opacity: fadeValue }]}>
                     <TouchableOpacity style={styles.primaryBtn} onPress={handleViewOrders}>
-                        <Text style={styles.primaryBtnText}>Check Order Status</Text>
+                        <Text style={styles.primaryBtnText}>{t('check_status')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.secondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleContinueShopping}>
-                        <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Continue Shopping</Text>
+                        <Text style={[styles.secondaryBtnText, { color: colors.text }]}>{t('continue_shopping')}</Text>
                     </TouchableOpacity>
                 </Animated.View>
 

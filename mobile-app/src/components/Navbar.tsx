@@ -17,9 +17,11 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const Navbar = () => {
   const navigation = useNavigation<any>();
+  const { t } = useLanguage();
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
   const { token } = useAuth();
@@ -32,9 +34,9 @@ const Navbar = () => {
   const wishlistCount = wishlist.length;
 
   const navLinks = [
-    { name: 'HOME', path: 'Home' },
-    { name: 'ABOUT', path: 'Static', params: { type: 'about' } },
-    { name: 'CONTACT', path: 'Static', params: { type: 'contact' } },
+    { name: t('home'), path: 'Home' },
+    { name: t('about'), path: 'Static', params: { type: 'about' } },
+    { name: t('contact'), path: 'Static', params: { type: 'contact' } },
   ];
 
   // Debounced search
@@ -145,12 +147,12 @@ const Navbar = () => {
           <View style={styles.searchResultsContainer}>
             {searchLoading && (
               <View style={styles.searchResultItem}>
-                <Text style={styles.searchResultText}>Searching…</Text>
+                <Text style={styles.searchResultText}>{t('searching')}</Text>
               </View>
             )}
             {!searchLoading && searchQuery.trim() && searchResults.length === 0 && (
               <View style={styles.searchResultItem}>
-                <Text style={styles.searchResultText}>No products found</Text>
+                <Text style={styles.searchResultText}>{t('no_results')}</Text>
               </View>
             )}
             {!searchLoading && searchResults.length > 0 && (
@@ -197,7 +199,7 @@ const Navbar = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Menu</Text>
+                <Text style={styles.modalTitle}>{t('menu')}</Text>
                 <TouchableOpacity
                   onPress={() => setIsMobileMenuOpen(false)}
                   style={styles.closeButton}
@@ -235,14 +237,14 @@ const Navbar = () => {
                         navigation.navigate('Profile');
                       }}
                     >
-                      <Text style={styles.menuItemText}>PROFILE</Text>
+                      <Text style={styles.menuItemText}>{t('profile')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.menuItem, styles.logoutButton]}
                       onPress={handleLogout}
                     >
                       <Ionicons name="log-out-outline" size={20} color="#fff" />
-                      <Text style={[styles.menuItemText, styles.logoutText]}>LOGOUT</Text>
+                      <Text style={[styles.menuItemText, styles.logoutText]}>{t('log_out')}</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -254,7 +256,7 @@ const Navbar = () => {
                     }}
                   >
                     <Ionicons name="log-in-outline" size={20} color="#fff" />
-                    <Text style={[styles.menuItemText, styles.loginText]}>SIGN IN</Text>
+                    <Text style={[styles.menuItemText, styles.loginText]}>{t('sign_in')}</Text>
                   </TouchableOpacity>
                 )}
               </ScrollView>

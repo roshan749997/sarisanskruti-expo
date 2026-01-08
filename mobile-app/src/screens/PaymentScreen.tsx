@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const PaymentScreen = () => {
   const route = useRoute<any>();
@@ -12,6 +13,7 @@ const PaymentScreen = () => {
   const { payuData } = route.params;
   const { clearCart } = useCart();
   const { colors, darkMode } = useTheme();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
 
   // Construct the form HTML
@@ -21,14 +23,14 @@ const PaymentScreen = () => {
   const formHtml = `
     <html>
       <head>
-        <title>Redirecting to Payment...</title>
+        <title>${t('redirecting_payment')}</title>
         <style>
           body { background-color: ${bgColor}; color: ${textColor}; font-family: system-ui; }
         </style>
       </head>
       <body onload="document.getElementById('payuForm').submit()">
         <center>
-          <h3>Please wait, redirecting to payment gateway...</h3>
+          <h3>${t('redirecting_gateway')}</h3>
         </center>
         <form id="payuForm" action="https://test.payu.in/_payment" method="post">
           <input type="hidden" name="key" value="${payuData.key}" />

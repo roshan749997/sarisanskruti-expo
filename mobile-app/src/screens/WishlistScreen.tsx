@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 const COLUMN_count = 2;
@@ -22,6 +23,7 @@ const WishlistScreen = () => {
     const { wishlist, removeFromWishlist } = useWishlist();
     const navigation = useNavigation<any>();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity
@@ -48,7 +50,7 @@ const WishlistScreen = () => {
                     {item.mrp && <Text style={styles.mrp}>₹{item.mrp}</Text>}
                 </View>
                 {item.discountPercent > 0 && (
-                    <Text style={styles.discount}>{item.discountPercent}% OFF</Text>
+                    <Text style={styles.discount}>{item.discountPercent}% {t('discount_off')}</Text>
                 )}
             </View>
         </TouchableOpacity>
@@ -58,13 +60,13 @@ const WishlistScreen = () => {
         return (
             <View style={[styles.center, { backgroundColor: colors.background }]}>
                 <Ionicons name="heart-outline" size={64} color="#ccc" />
-                <Text style={[styles.emptyText, { color: colors.text }]}>Your Wishlist is Empty</Text>
-                <Text style={[styles.subText, { color: colors.subText }]}>Tap the heart on any product to save it here.</Text>
+                <Text style={[styles.emptyText, { color: colors.text }]}>{t('empty_wishlist')}</Text>
+                <Text style={[styles.subText, { color: colors.subText }]}>{t('empty_wishlist_msg')}</Text>
                 <TouchableOpacity
                     style={styles.browseBtn}
                     onPress={() => navigation.navigate('Shop')}
                 >
-                    <Text style={styles.browseBtnText}>Browse Products</Text>
+                    <Text style={styles.browseBtnText}>{t('browse_products')}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -76,7 +78,7 @@ const WishlistScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5, marginRight: 10 }}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>My Wishlist ({wishlist.length})</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('my_wishlist')} ({wishlist.length})</Text>
             </View>
             <FlatList
                 data={wishlist}

@@ -20,6 +20,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
@@ -31,6 +32,7 @@ const ProductDetailScreen = () => {
     const { id } = route.params;
     const insets = useSafeAreaInsets();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     const { addToCart, cartCount } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -206,16 +208,16 @@ const ProductDetailScreen = () => {
                         )}
                         {discountPercent > 0 && (
                             <View style={styles.discountBadge}>
-                                <Text style={styles.discountText}>{discountPercent}% OFF</Text>
+                                <Text style={styles.discountText}>{discountPercent}% {t('discount_off')}</Text>
                             </View>
                         )}
                     </View>
-                    <Text style={styles.taxText}>Inclusive of all taxes</Text>
+                    <Text style={styles.taxText}>{t('inclusive_taxes')}</Text>
                 </View>
 
                 {/* Sizes (Mock) */}
                 <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Size</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('select_size')}</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sizeScroll}>
                         {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
                             <TouchableOpacity
@@ -231,17 +233,17 @@ const ProductDetailScreen = () => {
 
                 {/* Details */}
                 <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Product Details</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('product_details')}</Text>
                     <View style={styles.detailRow}>
-                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Material</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>{t('material')}</Text>
                         <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.SareeMaterial || product.material || 'Silk Blend'}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Color</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>{t('color')}</Text>
                         <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.SareeColor || product.color || 'Multicolor'}</Text>
                     </View>
                     <View style={styles.detailRow}>
-                        <Text style={[styles.detailLabel, { color: colors.subText }]}>Pattern</Text>
+                        <Text style={[styles.detailLabel, { color: colors.subText }]}>{t('pattern')}</Text>
                         <Text style={[styles.detailValue, { color: colors.text }]}>{product.product_info?.Pattern || 'Traditional'}</Text>
                     </View>
                     <Text style={[styles.descriptionText, { color: colors.subText }]}>
@@ -253,11 +255,11 @@ const ProductDetailScreen = () => {
                 <View style={[styles.section, { backgroundColor: colors.background, borderTopColor: darkMode ? '#222' : '#f9f9f9' }]}>
                     <View style={styles.deliveryRow}>
                         <Ionicons name="cube-outline" size={20} color={colors.subText} />
-                        <Text style={[styles.deliveryText, { color: colors.text }]}>7 Day Return & Exchange</Text>
+                        <Text style={[styles.deliveryText, { color: colors.text }]}>{t('return_policy')}</Text>
                     </View>
                     <View style={styles.deliveryRow}>
                         <Ionicons name="card-outline" size={20} color={colors.subText} />
-                        <Text style={[styles.deliveryText, { color: colors.text }]}>Cash on Delivery Available</Text>
+                        <Text style={[styles.deliveryText, { color: colors.text }]}>{t('cod_available')}</Text>
                     </View>
                 </View>
 
@@ -267,10 +269,10 @@ const ProductDetailScreen = () => {
             {/* Bottom Bar */}
             <View style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16, backgroundColor: colors.background, borderTopColor: colors.border }]}>
                 <TouchableOpacity style={[styles.cartBtn, { backgroundColor: colors.background, borderColor: colors.text }]} onPress={handleAddToCart} disabled={isAdding}>
-                    {isAdding ? <ActivityIndicator color={colors.text} /> : <Text style={[styles.cartBtnText, { color: colors.text }]}>ADD TO CART</Text>}
+                    {isAdding ? <ActivityIndicator color={colors.text} /> : <Text style={[styles.cartBtnText, { color: colors.text }]}>{t('add_to_cart')}</Text>}
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.buyBtn, { backgroundColor: colors.text }]} onPress={handleBuyNow}>
-                    <Text style={[styles.buyBtnText, { color: colors.background }]}>BUY NOW</Text>
+                    <Text style={[styles.buyBtnText, { color: colors.background }]}>{t('buy_now')}</Text>
                 </TouchableOpacity>
             </View>
         </View>

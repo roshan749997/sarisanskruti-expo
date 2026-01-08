@@ -28,6 +28,7 @@ import { api } from '../services/api';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage, LANGUAGES } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -150,7 +151,7 @@ const ProfileScreen = () => {
     const [notifUpdates, setNotifUpdates] = useState(false);
 
     // Language
-    const [selectedLanguage, setSelectedLanguage] = useState('English');
+    const { language, setLanguage, t } = useLanguage();
 
     // Theme
     const { darkMode, toggleDarkMode, colors } = useTheme();
@@ -165,15 +166,7 @@ const ProfileScreen = () => {
     }, [route.params?.tab]);
 
     useEffect(() => {
-        const loadSettings = async () => {
-            try {
-                const storedLang = await AsyncStorage.getItem('language');
-                if (storedLang) setSelectedLanguage(storedLang);
-            } catch (e) {
-                console.log('Error loading settings', e);
-            }
-        };
-        loadSettings();
+        // Language settings handled by context now
     }, []);
 
     const handleUpdatePassword = async () => {
@@ -205,15 +198,7 @@ const ProfileScreen = () => {
         }
     };
 
-    const applyLanguage = async () => {
-        try {
-            await AsyncStorage.setItem('language', selectedLanguage);
-            setLanguageModalVisible(false);
-            // Optionally reload app or context
-        } catch (e) {
-            console.log('Error saving language');
-        }
-    };
+    // Language application is now direct via context in modal
 
     useEffect(() => {
         if (isFocused) loadData();
@@ -301,8 +286,8 @@ const ProfileScreen = () => {
         <>
             <View style={[styles.header, darkMode && styles.headerDark]}>
                 <View style={styles.userInfo}>
-                    <Text style={styles.heyText}>Hello,</Text>
-                    <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name || 'Guest User'}</Text>
+                    <Text style={styles.heyText}>{t('hello')},</Text>
+                    <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name || t('guest_user')}</Text>
                 </View>
                 <TouchableOpacity onPress={openEditProfile} activeOpacity={0.8}>
                     <Image source={{ uri: user?.avatar || AVATARS[0] }} style={styles.profilePic} />
@@ -311,59 +296,59 @@ const ProfileScreen = () => {
             </View>
 
             <View style={[styles.gridContainer, darkMode && styles.menuGroupDark]}>
-                <QuickBtn icon="cube-outline" label="Orders" onPress={() => setViewMode('orders')} color="#2874F0" />
-                <QuickBtn icon="heart-outline" label="Wishlist" onPress={() => setViewMode('wishlist')} color="#FF4081" />
+                <QuickBtn icon="cube-outline" label={t('my_orders')} onPress={() => setViewMode('orders')} color="#2874F0" />
+                <QuickBtn icon="heart-outline" label={t('my_wishlist')} onPress={() => setViewMode('wishlist')} color="#FF4081" />
                 <QuickBtn icon="gift-outline" label="Coupons" onPress={() => Alert.alert("No Coupons")} color="#FF9800" />
                 <QuickBtn icon="headset-outline" label="Help" onPress={() => navigation.navigate('Static', { type: 'contact' })} color="#4CAF50" />
             </View>
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>Account Settings</Text>
+                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>{t('account_settings')}</Text>
                 <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
-                    <MenuItem icon="person-outline" label="Edit Profile" onPress={openEditProfile} />
-                    <MenuItem icon="location-outline" label="Saved Addresses" onPress={() => setViewMode('addresses')} />
-                    <MenuItem icon="card-outline" label="Payment Methods" onPress={() => setPaymentModalVisible(true)} color="#00897B" />
-                    <MenuItem icon="lock-closed-outline" label="Security & Password" onPress={() => setSecurityModalVisible(true)} color="#E91E63" />
-                    <MenuItem icon="notifications-outline" label="Notifications" onPress={() => setNotificationsModalVisible(true)} color="#FF6F00" />
-                    <MenuItem icon="language-outline" label="Select Language" onPress={() => setLanguageModalVisible(true)} />
+                    <MenuItem icon="person-outline" label={t('edit_profile')} onPress={openEditProfile} />
+                    <MenuItem icon="location-outline" label={t('saved_addresses')} onPress={() => setViewMode('addresses')} />
+                    <MenuItem icon="card-outline" label={t('payment_methods')} onPress={() => setPaymentModalVisible(true)} color="#00897B" />
+                    <MenuItem icon="lock-closed-outline" label={t('security_password')} onPress={() => setSecurityModalVisible(true)} color="#E91E63" />
+                    <MenuItem icon="notifications-outline" label={t('notifications')} onPress={() => setNotificationsModalVisible(true)} color="#FF6F00" />
+                    <MenuItem icon="language-outline" label={t('select_language')} onPress={() => setLanguageModalVisible(true)} />
                 </View>
 
-                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>App Preferences</Text>
+                <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>{t('app_preferences')}</Text>
                 <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
                     <TouchableOpacity style={[styles.menuItem, darkMode && styles.borderDark]} onPress={toggleDarkMode}>
                         <View style={styles.menuLeft}>
                             <Ionicons name="moon-outline" size={22} color="#5E35B1" />
-                            <Text style={[styles.menuLabel, { marginLeft: 16 }, darkMode && styles.textDark]}>Dark Mode</Text>
+                            <Text style={[styles.menuLabel, { marginLeft: 16 }, darkMode && styles.textDark]}>{t('dark_mode')}</Text>
                         </View>
                         <View style={[styles.switch, darkMode && styles.switchActive]}>
                             <View style={[styles.switchThumb, darkMode && styles.switchThumbActive]} />
                         </View>
                     </TouchableOpacity>
-                    <MenuItem icon="download-outline" label="Download Invoices" onPress={() => Alert.alert("Invoices", "View and download your order invoices")} color="#1976D2" />
+                    <MenuItem icon="download-outline" label={t('download_invoices')} onPress={() => Alert.alert("Invoices", "View and download your order invoices")} color="#1976D2" />
                 </View>
 
-                <Text style={[styles.sectionHeader, { color: colors.subText }]}>My Activity</Text>
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('my_activity')}</Text>
                 <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
-                    <MenuItem icon="star-outline" label="Reviews & Ratings" onPress={() => Alert.alert("Reviews", "No reviews yet")} color="#FFC107" />
-                    <MenuItem icon="help-circle-outline" label="Questions & Answers" onPress={() => navigation.navigate('Static', { type: 'about' })} color="#673AB7" />
-                    <MenuItem icon="chatbubbles-outline" label="My Chats" onPress={() => Alert.alert("Chats", "View your conversations with sellers")} color="#00ACC1" />
+                    <MenuItem icon="star-outline" label={t('reviews_ratings')} onPress={() => Alert.alert("Reviews", "No reviews yet")} color="#FFC107" />
+                    <MenuItem icon="help-circle-outline" label={t('questions_answers')} onPress={() => navigation.navigate('Static', { type: 'about' })} color="#673AB7" />
+                    <MenuItem icon="chatbubbles-outline" label={t('my_chats')} onPress={() => Alert.alert("Chats", "View your conversations with sellers")} color="#00ACC1" />
                 </View>
 
-                <Text style={[styles.sectionHeader, { color: colors.subText }]}>Earn & Rewards</Text>
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('earn_rewards')}</Text>
                 <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
-                    <MenuItem icon="gift-outline" label="Refer & Earn" onPress={() => Alert.alert("Refer & Earn", "Invite friends and earn rewards!\n\nShare your referral code: SARI2026")} color="#8E24AA" />
-                    <MenuItem icon="wallet-outline" label="My Wallet" onPress={() => Alert.alert("Wallet", "Balance: ₹0\n\nEarn cashback on purchases!")} color="#43A047" />
+                    <MenuItem icon="gift-outline" label={t('refer_earn')} onPress={() => Alert.alert("Refer & Earn", "Invite friends and earn rewards!\n\nShare your referral code: SARI2026")} color="#8E24AA" />
+                    <MenuItem icon="wallet-outline" label={t('my_wallet')} onPress={() => Alert.alert("Wallet", "Balance: ₹0\n\nEarn cashback on purchases!")} color="#43A047" />
                 </View>
 
-                <Text style={[styles.sectionHeader, { color: colors.subText }]}>Feedback & Information</Text>
+                <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('feedback_info')}</Text>
                 <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
-                    <MenuItem icon="document-text-outline" label="Terms, Policies and Licenses" onPress={() => navigation.navigate('Static', { type: 'terms' })} color="#607D8B" />
-                    <MenuItem icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => navigation.navigate('Static', { type: 'privacy' })} color="#607D8B" />
-                    <MenuItem icon="information-circle-outline" label="About Us" onPress={() => navigation.navigate('Static', { type: 'about' })} color="#607D8B" />
+                    <MenuItem icon="document-text-outline" label={t('terms_policies')} onPress={() => navigation.navigate('Static', { type: 'terms' })} color="#607D8B" />
+                    <MenuItem icon="shield-checkmark-outline" label={t('privacy_policy')} onPress={() => navigation.navigate('Static', { type: 'privacy' })} color="#607D8B" />
+                    <MenuItem icon="information-circle-outline" label={t('about_us')} onPress={() => navigation.navigate('Static', { type: 'about' })} color="#607D8B" />
                 </View>
 
                 <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleLogout}>
-                    <Text style={styles.logoutText}>Log Out</Text>
+                    <Text style={styles.logoutText}>{t('log_out')}</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.version}>Sari Sanskruti v2.1.0</Text>
@@ -621,21 +606,21 @@ const ProfileScreen = () => {
             {/* Language Selection Modal */}
             <Modal visible={languageModalVisible} animationType="slide" transparent={true} onRequestClose={() => setLanguageModalVisible(false)}>
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Language</Text>
-                            <TouchableOpacity onPress={() => setLanguageModalVisible(false)}><Ionicons name="close" size={24} color="#000" /></TouchableOpacity>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('select_language')}</Text>
+                            <TouchableOpacity onPress={() => setLanguageModalVisible(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
                         </View>
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            {['English', 'हिन्दी (Hindi)', 'ગુજરાતી (Gujarati)', 'मराठी (Marathi)', 'தமிழ் (Tamil)', 'తెలుగు (Telugu)'].map((lang, i) => (
-                                <TouchableOpacity key={i} style={styles.langOption} onPress={() => setSelectedLanguage(lang)}>
-                                    <Text style={styles.langText}>{lang}</Text>
-                                    {selectedLanguage === lang && <Ionicons name="checkmark-circle" size={24} color="#2874F0" />}
+                            {LANGUAGES.map((lang, i) => (
+                                <TouchableOpacity key={i} style={[styles.langOption, { borderBottomColor: colors.border }]} onPress={async () => { await setLanguage(lang.code); setLanguageModalVisible(false); }}>
+                                    <Text style={[styles.langText, { color: colors.text }]}>{lang.label}</Text>
+                                    {language === lang.code && <Ionicons name="checkmark-circle" size={24} color="#2874F0" />}
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
-                        <TouchableOpacity style={styles.saveBtn} onPress={applyLanguage}>
-                            <Text style={styles.saveBtnText}>Apply Language</Text>
+                        <TouchableOpacity style={styles.saveBtn} onPress={() => setLanguageModalVisible(false)}>
+                            <Text style={styles.saveBtnText}>Close</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

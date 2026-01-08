@@ -16,11 +16,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
   const { colors, darkMode } = useTheme();
+  const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
   const [formData, setFormData] = useState({
     email: '',
@@ -170,7 +172,7 @@ const LoginScreen = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('login_title')}</Text>
             <Text style={[styles.subtitle, { color: colors.subText }]}>Sign in to your account to continue shopping</Text>
           </View>
 
@@ -196,7 +198,7 @@ const LoginScreen = () => {
                 <Text style={[
                   styles.toggleText,
                   authMode === 'password' && styles.toggleTextActive
-                ]}>Password</Text>
+                ]}>{t('password_label')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -213,17 +215,17 @@ const LoginScreen = () => {
                 <Text style={[
                   styles.toggleText,
                   authMode === 'otp' && styles.toggleTextActive
-                ]}>OTP Login</Text>
+                ]}>{t('login_with_otp')}</Text>
               </TouchableOpacity>
             </View>
 
             {authMode === 'password' ? (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>Email Address</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>{t('email_label')}</Text>
                   <TextInput
                     style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder="Enter your email"
+                    placeholder={t('email_placeholder')}
                     placeholderTextColor={colors.subText}
                     value={formData.email}
                     onChangeText={(text) => setFormData({ ...formData, email: text })}
@@ -233,10 +235,10 @@ const LoginScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>Password</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>{t('password_label')}</Text>
                   <TextInput
                     style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder="Enter your password"
+                    placeholder={t('password_placeholder')}
                     placeholderTextColor={colors.subText}
                     value={formData.password}
                     onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -245,16 +247,16 @@ const LoginScreen = () => {
                 </View>
 
                 <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                  <Text style={styles.forgotPassword}>Forgot password?</Text>
+                  <Text style={styles.forgotPassword}>{t('forgot_password')}</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>Phone Number</Text>
+                  <Text style={[styles.label, { color: colors.subText }]}>{t('phone_label')}</Text>
                   <TextInput
                     style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder="Enter your 10-digit phone number"
+                    placeholder={t('phone_placeholder')}
                     placeholderTextColor={colors.subText}
                     value={formData.phone}
                     onChangeText={(text) => setFormData({ ...formData, phone: text })}
@@ -266,10 +268,10 @@ const LoginScreen = () => {
 
                 {otpSent && (
                   <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.subText }]}>Enter OTP</Text>
+                    <Text style={[styles.label, { color: colors.subText }]}>{t('otp_placeholder')}</Text>
                     <TextInput
                       style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                      placeholder="Enter 6-digit OTP"
+                      placeholder={t('otp_placeholder')}
                       placeholderTextColor={colors.subText}
                       value={formData.otp}
                       onChangeText={(text) => setFormData({ ...formData, otp: text })}
@@ -293,7 +295,7 @@ const LoginScreen = () => {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Send OTP</Text>
+                  <Text style={styles.primaryButtonText}>{t('send_otp')}</Text>
                 )}
               </TouchableOpacity>
             )}
@@ -307,7 +309,7 @@ const LoginScreen = () => {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Sign In</Text>
+                  <Text style={styles.primaryButtonText}>{t('sign_in')}</Text>
                 )}
               </TouchableOpacity>
             )}
@@ -318,7 +320,7 @@ const LoginScreen = () => {
                 onPress={handleSendOTP}
                 disabled={loading}
               >
-                <Text style={styles.secondaryButtonText}>Resend OTP</Text>
+                <Text style={styles.secondaryButtonText}>{t('resend_otp')}</Text>
               </TouchableOpacity>
             )}
 
@@ -330,9 +332,9 @@ const LoginScreen = () => {
             </TouchableOpacity>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
+              <Text style={styles.footerText}>{t('dont_have_account')} </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.linkText}>Sign up here</Text>
+                <Text style={styles.linkText}>{t('register_title')}</Text>
               </TouchableOpacity>
             </View>
           </View>

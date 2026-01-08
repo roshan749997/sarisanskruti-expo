@@ -24,12 +24,14 @@ import Header from '../components/Header';
 import HeroSlider from '../components/HeroSlider';
 import Footer from '../components/Footer';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, darkMode } = useTheme();
+  const { t } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
   const [trendingNow, setTrendingNow] = useState<any[]>([]);
@@ -227,9 +229,9 @@ const HomeScreen = () => {
       {/* Shop By Category */}
       <View style={[styles.section, { backgroundColor: colors.background, borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Shop by Category</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('shop_by_category')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
-            <Text style={styles.viewAllText}>View All</Text>
+            <Text style={styles.viewAllText}>{t('view_all')}</Text>
           </TouchableOpacity>
         </View>
         <FlatList
@@ -246,11 +248,11 @@ const HomeScreen = () => {
       <View style={[styles.section, { backgroundColor: darkMode ? '#2C2C1E' : '#FFFDE7', borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Best Sellers</Text>
-            <Text style={styles.sectionSubtitle}>Most Loved Styles</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('best_sellers')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('most_loved')}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
-            <Text style={styles.viewAllText}>View All</Text>
+            <Text style={styles.viewAllText}>{t('view_all')}</Text>
           </TouchableOpacity>
         </View>
         {loading && bestSellers.length === 0 ? (
@@ -273,7 +275,7 @@ const HomeScreen = () => {
       {/* Promos */}
       <View style={[styles.promoSection, { backgroundColor: colors.background, borderBottomColor: darkMode ? '#222' : '#f9f9f9' }]}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Festive Specials</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('festive_specials')}</Text>
         </View>
         <View style={styles.promoColumn}>
           <TouchableOpacity style={styles.promoBannerFull} activeOpacity={0.9} onPress={() => navigation.navigate('Shop')}>
@@ -296,9 +298,9 @@ const HomeScreen = () => {
       {/* Trending Now Header */}
       <View style={[styles.section, { borderBottomWidth: 0, paddingBottom: 10, backgroundColor: colors.background }]}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Trending Now</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('trending_now')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Shop')}>
-            <Text style={styles.viewAllText}>See All</Text>
+            <Text style={styles.viewAllText}>{t('view_all')}</Text>
           </TouchableOpacity>
         </View>
         {loading && trendingNow.length === 0 && (

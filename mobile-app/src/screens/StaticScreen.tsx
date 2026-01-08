@@ -4,12 +4,14 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const StaticScreen = () => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const { type } = route.params || { type: 'about' };
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
 
     const renderHeader = (title: string, subtitle?: string) => (
         <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
@@ -25,7 +27,7 @@ const StaticScreen = () => {
 
     const renderAbout = () => (
         <ScrollView style={styles.container}>
-            {renderHeader('About Us', 'Weaving Traditions, Draping Dreams')}
+            {renderHeader(t('about_us'), t('about_subtitle'))}
             <View style={styles.content}>
                 <Text style={[styles.paragraph, { color: colors.text }]}>
                     At sarisanskruti, we celebrate the timeless grace of Indian women through the nine yards of elegance — the saree. Our name reflects what we stand for — a world of sarees that unites the diverse weaves, colors, and stories of India under one roof.
@@ -35,21 +37,21 @@ const StaticScreen = () => {
                 </Text>
 
                 <View style={[styles.highlightBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={styles.boxTitle}>OUR VISION</Text>
+                    <Text style={styles.boxTitle}>{t('our_vision_title')}</Text>
                     <Text style={[styles.boxText, { color: colors.text }]}>
                         To revive, preserve, and promote India's rich handloom heritage while blending it with contemporary elegance. sarisanskruti strives to make traditional artistry accessible to every woman who believes in grace with authenticity.
                     </Text>
                 </View>
 
-                <Text style={styles.sectionTitle}>WHAT MAKES US SPECIAL?</Text>
+                <Text style={styles.sectionTitle}>{t('what_makes_us_special')}</Text>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>🧵 Authentic Handloom Sarees</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>🧵 {t('authentic_handloom')}</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>We collaborate directly with skilled artisans and weavers across India to bring you genuine handwoven masterpieces.</Text>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>✨ Curated for Every Occasion</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>✨ {t('curated_occasion')}</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>Whether you're dressing up for a festive celebration, a wedding, or a simple workday, we have something crafted just for you.</Text>
                 </View>
 
@@ -62,34 +64,34 @@ const StaticScreen = () => {
 
     const renderContact = () => (
         <ScrollView style={styles.container}>
-            {renderHeader('Contact Us', 'Keep in touch with us')}
+            {renderHeader(t('contact'), t('contact_subtitle'))}
             <View style={styles.content}>
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>📍 STORE LOCATION</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>📍 {t('store_location_label')}</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>Office No 114,1st floor, Vardhman Capital Mall, Plot no 9 & 10, L.S.C Shakti Nagar Gulabi Bagh, Delhi 110007</Text>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>📧 EMAIL</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>📧 {t('email_label')}</Text>
                     <TouchableOpacity onPress={() => Linking.openURL('mailto:support@sarisanskruti.in')}>
                         <Text style={[styles.cardText, { color: 'blue' }]}>support@sarisanskruti.in</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>📱 PHONE</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>📱 {t('phone_label')}</Text>
                     <TouchableOpacity onPress={() => Linking.openURL('tel:+917303680269')}>
                         <Text style={[styles.cardText, { color: colors.subText }]}>+91 73036 80269</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>🏢 COMPANY DETAILS</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>🏢 {t('company_details_label')}</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>SAVARIYAAN TECHNORAFT PRIVATE LIMITED</Text>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>🕐 OPEN HOURS</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>🕐 {t('open_hours_label')}</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>Monday – Saturday: 8:00 am – 4:00pm</Text>
                     <Text style={[styles.cardText, { color: colors.subText }]}>Sunday: Close</Text>
                 </View>
@@ -99,7 +101,7 @@ const StaticScreen = () => {
 
     const renderTerms = () => (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            {renderHeader('Terms & Conditions', 'Legal Agreement for Platform Usage')}
+            {renderHeader(t('terms_policies'), t('terms_subtitle'))}
             <View style={styles.content}>
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.cardTitle, { color: colors.text }]}>Introduction</Text>
@@ -143,7 +145,7 @@ const StaticScreen = () => {
 
     const renderPrivacy = () => (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            {renderHeader('Privacy Policy', 'Your Privacy Matters to Us')}
+            {renderHeader(t('privacy_policy'), t('privacy_subtitle'))}
             <View style={styles.content}>
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.cardTitle, { color: colors.text }]}>1. Introduction</Text>
@@ -181,7 +183,7 @@ const StaticScreen = () => {
 
     const renderShipping = () => (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            {renderHeader('Shipping & Delivery', 'Fast, Reliable, and Secure Delivery')}
+            {renderHeader(t('shipping_title'), t('shipping_subtitle'))}
             <View style={styles.content}>
                 <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.cardTitle, { color: colors.text }]}>1. Processing & Delivery Time</Text>

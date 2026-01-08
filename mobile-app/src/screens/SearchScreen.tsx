@@ -16,12 +16,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { api } from '../services/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 const SearchScreen = () => {
     const navigation = useNavigation<any>();
     const { colors, darkMode } = useTheme();
+    const { t } = useLanguage();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -101,7 +103,7 @@ const SearchScreen = () => {
                     <Ionicons name="search" size={20} color={colors.subText} style={styles.searchIcon} />
                     <TextInput
                         style={[styles.input, { color: colors.text }]}
-                        placeholder="Search for sarees, kurtis..."
+                        placeholder={t('search_hint')}
                         placeholderTextColor={colors.subText}
                         value={query}
                         onChangeText={setQuery}
@@ -138,15 +140,15 @@ const SearchScreen = () => {
                                     style={{ width: 100, height: 100, marginBottom: 20, opacity: 0.5 }}
                                     resizeMode="contain"
                                 />
-                                <Text style={[styles.noResults, { color: colors.text }]}>No products found for "{query}"</Text>
-                                <Text style={[styles.subText, { color: colors.subText }]}>Try checking your spelling or use different keywords</Text>
+                                <Text style={[styles.noResults, { color: colors.text }]}>{t('no_results_for')} "{query}"</Text>
+                                <Text style={[styles.subText, { color: colors.subText }]}>{t('search_retry_msg')}</Text>
                             </View>
                         ) : (
                             <View style={styles.center}>
                                 {!hasSearched && (
                                     <View style={{ alignItems: 'center' }}>
                                         <Ionicons name="search-outline" size={64} color={colors.border} />
-                                        <Text style={[styles.subText, { marginTop: 10, color: colors.subText }]}>Type to search products</Text>
+                                        <Text style={[styles.subText, { marginTop: 10, color: colors.subText }]}>{t('type_to_search')}</Text>
                                     </View>
                                 )}
                             </View>
