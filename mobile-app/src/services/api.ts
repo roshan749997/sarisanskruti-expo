@@ -170,7 +170,14 @@ export const api = {
     }
 
     console.log('🌐 Fetching products from API');
-    const res = await apiClient.get('/products');
+    
+    // Use axios directly without auth interceptor for public endpoints
+    const res = await axios.get(`${API_URL}/products`, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     // Store in cache
     cache[cacheKey] = {

@@ -23,6 +23,7 @@ export type RootStackParamList = {
   // Static
   // Static
   Static: { type: 'about' | 'contact' | 'terms' | 'privacy' | 'shipping' | 'returns' };
+  InvoiceDownload: undefined;
 };
 
 // Also define Tab params if we strictly type them

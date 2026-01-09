@@ -53,10 +53,10 @@ const HomeScreen = () => {
     { name: 'SISHU', path: 'ProductList', params: { category: 'Sishu' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156281/6b450cec-316c-4897-9db4-c3621dfa35fa.png' },
     { name: 'SILK', path: 'ProductList', params: { category: 'silk' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png' },
     { name: 'COTTON', path: 'ProductList', params: { category: 'cotton' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png' },
-    { name: 'REGIONAL', path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762332592/683cb274-bd83-464f-a5b2-db774c250fde.png' },
-    { name: 'BANARASI', path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762500248/d4f99ab4-dee8-4e28-9eaf-c973699ba6f5.png' },
+    { name: 'REGIONAL', path: 'ProductList', params: { category: 'regional' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png' },
+    { name: 'BANARASI', path: 'ProductList', params: { category: 'banarasi' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764156521/faaed640-0829-4861-80a2-6c7dc3e73bf3.png' },
     { name: 'DESIGNER SAREES', path: 'ProductList', params: { category: 'designer-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762110448/unnamed_jh6wqf.jpg' },
-    { name: 'PRINTED SAREES', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/duc9svg7w/image/upload/v1762754174/296c91cc-658f-447c-ba8c-079e1bc530b5.png' },
+    { name: 'PRINTED SAREES', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png' },
   ];
 
   useEffect(() => {
@@ -162,7 +162,7 @@ const HomeScreen = () => {
           </View>
 
           <TouchableOpacity
-            style={styles.wishlistButton}
+            style={[styles.wishlistButton, { backgroundColor: darkMode ? 'rgba(0,0,0,0.6)' : '#fff' }]}
             onPress={(e) => {
               e.stopPropagation();
               handleWishlistToggle(item);
@@ -171,18 +171,18 @@ const HomeScreen = () => {
             <Ionicons
               name={isWishlisted ? "heart" : "heart-outline"}
               size={18}
-              color={isWishlisted ? "#e11d48" : "#333"}
+              color={isWishlisted ? "#e11d48" : (darkMode ? "#fff" : "#333")}
             />
           </TouchableOpacity>
 
-          <View style={styles.ratingPill}>
-            <Text style={styles.ratingText}>{rating}</Text>
-            <Ionicons name="star" size={8} color="#000" style={{ marginLeft: 2 }} />
+          <View style={[styles.ratingPill, { backgroundColor: darkMode ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
+            <Text style={[styles.ratingText, { color: darkMode ? '#fff' : '#333' }]}>{rating}</Text>
+            <Ionicons name="star" size={8} color={darkMode ? "#FFD700" : "#000"} style={{ marginLeft: 2 }} />
           </View>
 
           {isGrid && (
             <TouchableOpacity
-              style={styles.quickAddBtn}
+              style={[styles.quickAddBtn, { backgroundColor: darkMode ? '#333' : '#212121' }]}
               onPress={(e) => {
                 e.stopPropagation();
                 addToCart(item, 1);

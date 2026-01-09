@@ -74,8 +74,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!silent) setLoading(true);
             const data = await api.getCart();
             setCart(mapServerCartToUI(data));
-        } catch (error) {
-            console.log('Error loading cart', error);
+        } catch (error: any) {
+            // Don't log 401 errors - they're expected when not authenticated
+            if (error?.response?.status !== 401) {
+                console.log('Error loading cart', error);
+            }
+            setCart([]);
         } finally {
             if (!silent) setLoading(false);
         }
@@ -151,11 +155,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Silent sync
             loadCart(true).catch(e => console.log('Background cart sync failed', e));
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('AddToCart error', error);
             // Revert on failure
             setCart(previousCart);
-            Alert.alert('Error', 'Failed to add to cart. Please check your connection.');
+
+            // Show appropriate error message
+            if (error?.response?.status === 401) {
+                Alert.alert('Authentication Required', 'Please login to add items to your cart.');
+            } else {
+                Alert.alert('Error', 'Failed to add to cart. Please check your connection.');
+            }
         }
     };
 

@@ -43,6 +43,7 @@ const AVATARS = [
 
 const OrderCard = ({ order }: { order: any }) => {
     const { colors } = useTheme();
+    const navigation = useNavigation();
     const [expanded, setExpanded] = useState(false);
     const toggleExpand = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -99,6 +100,17 @@ const OrderCard = ({ order }: { order: any }) => {
                     <Text style={[styles.paymentText, { color: colors.subText }]}>
                         <Ionicons name="card-outline" size={14} color={colors.subText} /> {order.paymentMethod || 'Online'}
                     </Text>
+
+                    <View style={styles.divider} />
+                    <TouchableOpacity
+                        style={styles.downloadInvoiceBtn}
+                        onPress={() => navigation.navigate('InvoiceDownload' as never)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="document-text" size={20} color="#2874F0" />
+                        <Text style={styles.downloadInvoiceText}>Download Invoice</Text>
+                        <Ionicons name="download-outline" size={18} color="#2874F0" />
+                    </TouchableOpacity>
                 </View>
             )}
         </TouchableOpacity>
@@ -139,11 +151,14 @@ const ProfileScreen = () => {
     const [editAvatar, setEditAvatar] = useState('');
     const [updating, setUpdating] = useState(false);
 
-    // Account Settings Modals
-    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-    const [securityModalVisible, setSecurityModalVisible] = useState(false);
+    // Profile View Modal
+    const [profileViewModalVisible, setProfileViewModalVisible] = useState(false);
+
+    // Other Modals
     const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+    const [securityModalVisible, setSecurityModalVisible] = useState(false);
 
     // Notification Settings
     const [notifOrders, setNotifOrders] = useState(true);
@@ -289,26 +304,22 @@ const ProfileScreen = () => {
                     <Text style={styles.heyText}>{t('hello')},</Text>
                     <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name || t('guest_user')}</Text>
                 </View>
-                <TouchableOpacity onPress={openEditProfile} activeOpacity={0.8}>
+                <View>
                     <Image source={{ uri: user?.avatar || AVATARS[0] }} style={styles.profilePic} />
-                    <View style={styles.editIconBadge}><Ionicons name="pencil" size={12} color="#fff" /></View>
-                </TouchableOpacity>
+                </View>
             </View>
 
             <View style={[styles.gridContainer, darkMode && styles.menuGroupDark]}>
                 <QuickBtn icon="cube-outline" label={t('my_orders')} onPress={() => setViewMode('orders')} color="#2874F0" />
                 <QuickBtn icon="heart-outline" label={t('my_wishlist')} onPress={() => setViewMode('wishlist')} color="#FF4081" />
-                <QuickBtn icon="gift-outline" label="Coupons" onPress={() => Alert.alert("No Coupons")} color="#FF9800" />
                 <QuickBtn icon="headset-outline" label="Help" onPress={() => navigation.navigate('Static', { type: 'contact' })} color="#4CAF50" />
             </View>
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
                 <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>{t('account_settings')}</Text>
                 <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
-                    <MenuItem icon="person-outline" label={t('edit_profile')} onPress={openEditProfile} />
+                    <MenuItem icon="person-outline" label="My Profile" onPress={() => setProfileViewModalVisible(true)} />
                     <MenuItem icon="location-outline" label={t('saved_addresses')} onPress={() => setViewMode('addresses')} />
-                    <MenuItem icon="card-outline" label={t('payment_methods')} onPress={() => setPaymentModalVisible(true)} color="#00897B" />
-                    <MenuItem icon="lock-closed-outline" label={t('security_password')} onPress={() => setSecurityModalVisible(true)} color="#E91E63" />
                     <MenuItem icon="notifications-outline" label={t('notifications')} onPress={() => setNotificationsModalVisible(true)} color="#FF6F00" />
                     <MenuItem icon="language-outline" label={t('select_language')} onPress={() => setLanguageModalVisible(true)} />
                 </View>
@@ -324,20 +335,7 @@ const ProfileScreen = () => {
                             <View style={[styles.switchThumb, darkMode && styles.switchThumbActive]} />
                         </View>
                     </TouchableOpacity>
-                    <MenuItem icon="download-outline" label={t('download_invoices')} onPress={() => Alert.alert("Invoices", "View and download your order invoices")} color="#1976D2" />
-                </View>
-
-                <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('my_activity')}</Text>
-                <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
-                    <MenuItem icon="star-outline" label={t('reviews_ratings')} onPress={() => Alert.alert("Reviews", "No reviews yet")} color="#FFC107" />
-                    <MenuItem icon="help-circle-outline" label={t('questions_answers')} onPress={() => navigation.navigate('Static', { type: 'about' })} color="#673AB7" />
-                    <MenuItem icon="chatbubbles-outline" label={t('my_chats')} onPress={() => Alert.alert("Chats", "View your conversations with sellers")} color="#00ACC1" />
-                </View>
-
-                <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('earn_rewards')}</Text>
-                <View style={[styles.menuGroup, { backgroundColor: colors.card }]}>
-                    <MenuItem icon="gift-outline" label={t('refer_earn')} onPress={() => Alert.alert("Refer & Earn", "Invite friends and earn rewards!\n\nShare your referral code: SARI2026")} color="#8E24AA" />
-                    <MenuItem icon="wallet-outline" label={t('my_wallet')} onPress={() => Alert.alert("Wallet", "Balance: ₹0\n\nEarn cashback on purchases!")} color="#43A047" />
+                    <MenuItem icon="download-outline" label={t('download_invoices')} onPress={() => navigation.navigate('InvoiceDownload' as never)} color="#1976D2" />
                 </View>
 
                 <Text style={[styles.sectionHeader, { color: colors.subText }]}>{t('feedback_info')}</Text>
@@ -453,6 +451,117 @@ const ProfileScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
+            </Modal>
+
+            {/* Profile View Modal (Read-Only) */}
+            <Modal visible={profileViewModalVisible} animationType="slide" transparent={true} onRequestClose={() => setProfileViewModalVisible(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>My Profile</Text>
+                            <TouchableOpacity onPress={() => setProfileViewModalVisible(false)}>
+                                <Ionicons name="close" size={24} color={colors.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
+                            {/* Avatar Section */}
+                            <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                                <View style={{ position: 'relative' }}>
+                                    <Image
+                                        source={{ uri: user?.avatar || AVATARS[0] }}
+                                        style={{ width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#2874F0' }}
+                                    />
+                                    <View style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        backgroundColor: '#4CAF50',
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 14,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        borderWidth: 2,
+                                        borderColor: colors.card
+                                    }}>
+                                        <Ionicons name="checkmark" size={16} color="#fff" />
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text, marginTop: 16 }}>
+                                    {user?.name || 'Guest User'}
+                                </Text>
+                                <Text style={{ fontSize: 14, color: colors.subText, marginTop: 4 }}>
+                                    Member since {new Date(user?.createdAt || Date.now()).getFullYear()}
+                                </Text>
+                            </View>
+
+                            {/* Profile Information */}
+                            <View style={{ paddingHorizontal: 4 }}>
+                                {/* Email */}
+                                <View style={[styles.profileInfoCard, { backgroundColor: colors.background }]}>
+                                    <View style={styles.profileInfoIcon}>
+                                        <Ionicons name="mail" size={20} color="#2874F0" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.profileInfoLabel, { color: colors.subText }]}>Email Address</Text>
+                                        <Text style={[styles.profileInfoValue, { color: colors.text }]}>
+                                            {user?.email || 'Not provided'}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Phone */}
+                                <View style={[styles.profileInfoCard, { backgroundColor: colors.background }]}>
+                                    <View style={styles.profileInfoIcon}>
+                                        <Ionicons name="call" size={20} color="#4CAF50" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.profileInfoLabel, { color: colors.subText }]}>Phone Number</Text>
+                                        <Text style={[styles.profileInfoValue, { color: colors.text }]}>
+                                            {user?.phone || 'Not provided'}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* User ID */}
+                                <View style={[styles.profileInfoCard, { backgroundColor: colors.background }]}>
+                                    <View style={styles.profileInfoIcon}>
+                                        <Ionicons name="finger-print" size={20} color="#FF9800" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.profileInfoLabel, { color: colors.subText }]}>User ID</Text>
+                                        <Text style={[styles.profileInfoValue, { color: colors.text, fontSize: 12 }]}>
+                                            {user?._id?.substring(0, 16) || 'N/A'}...
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* Info Note */}
+                            <View style={{
+                                flexDirection: 'row',
+                                backgroundColor: '#E3F2FD',
+                                padding: 12,
+                                borderRadius: 8,
+                                marginTop: 16,
+                                marginHorizontal: 4
+                            }}>
+                                <Ionicons name="information-circle" size={20} color="#2874F0" style={{ marginRight: 10 }} />
+                                <Text style={{ flex: 1, fontSize: 13, color: '#1976D2', lineHeight: 18 }}>
+                                    Your profile information is view-only. Contact support to update your details.
+                                </Text>
+                            </View>
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            style={[styles.saveBtn, { marginTop: 16 }]}
+                            onPress={() => setProfileViewModalVisible(false)}
+                        >
+                            <Text style={styles.saveBtnText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </Modal>
 
             {/* Payment Methods Modal */}
@@ -744,6 +853,52 @@ const styles = StyleSheet.create({
     // Language
     langOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
     langText: { fontSize: 15, color: '#212121' },
+
+    // Download Invoice Button
+    downloadInvoiceBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#E3F2FD',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 12,
+        gap: 8,
+    },
+    downloadInvoiceText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2874F0',
+        textAlign: 'center',
+    },
+
+    // Profile View Modal
+    profileInfoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+    },
+    profileInfoIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 14,
+    },
+    profileInfoLabel: {
+        fontSize: 12,
+        marginBottom: 4,
+        fontWeight: '500',
+    },
+    profileInfoValue: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
 
     loaderOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }
 });

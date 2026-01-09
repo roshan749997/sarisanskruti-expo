@@ -26,6 +26,7 @@ import PaymentScreen from '../screens/PaymentScreen';
 import StaticScreen from '../screens/StaticScreen';
 import OrderSuccessScreen from '../screens/OrderSuccessScreen';
 import OrderFailureScreen from '../screens/OrderFailureScreen';
+import InvoiceDownloadScreen from '../screens/InvoiceDownloadScreen';
 
 // Icons (using basic text or vector icons if available, assuming vector-icons might be needed for polish later)
 import { Ionicons } from '@expo/vector-icons';
@@ -84,13 +85,45 @@ const RootNavigator = () => {
     }
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="MainTab" component={MainTabs} />
+        <Stack.Navigator
+            screenOptions={{ headerShown: false }}
+            initialRouteName="MainTab"
+        >
+            {/* Main App - This is the initial route */}
+            <Stack.Screen
+                name="MainTab"
+                component={MainTabs}
+                options={{
+                    // Prevent going back from MainTab
+                    gestureEnabled: false,
+                }}
+            />
 
-            {/* Auth Screens - available to be pushed */}
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            {/* Auth Screens - Modal presentation to prevent back navigation issues */}
+            <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{
+                    presentation: 'card',
+                    gestureEnabled: true,
+                }}
+            />
+            <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{
+                    presentation: 'card',
+                    gestureEnabled: true,
+                }}
+            />
+            <Stack.Screen
+                name="ForgotPassword"
+                component={ForgotPasswordScreen}
+                options={{
+                    presentation: 'card',
+                    gestureEnabled: true,
+                }}
+            />
 
             {/* Product Flow */}
             <Stack.Screen name="ProductList" component={ProductListScreen} />
@@ -106,6 +139,7 @@ const RootNavigator = () => {
 
             {/* Static Pages */}
             <Stack.Screen name="Static" component={StaticScreen} />
+            <Stack.Screen name="InvoiceDownload" component={InvoiceDownloadScreen} />
         </Stack.Navigator>
     );
 };

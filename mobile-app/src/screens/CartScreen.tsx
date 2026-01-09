@@ -55,7 +55,7 @@ const CartScreen = () => {
     const finalAmount = cartTotal + shippingCost; // Tax usually included in price in India, strictly speaking
 
     const StepIndicator = () => (
-        <View style={styles.stepContainer}>
+        <View style={[styles.stepContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <View style={styles.step}>
                 <View style={[styles.stepCircle, styles.stepActive]}>
                     <Ionicons name="cart" size={16} color="#fff" />
@@ -64,15 +64,15 @@ const CartScreen = () => {
             </View>
             <View style={[styles.stepLine, styles.stepLineActive]} />
             <View style={styles.step}>
-                <View style={[styles.stepCircle, styles.stepInactive]}>
-                    <Text style={styles.stepNumber}>2</Text>
+                <View style={[styles.stepCircle, styles.stepInactive, { backgroundColor: darkMode ? '#333' : '#eee' }]}>
+                    <Text style={[styles.stepNumber, { color: colors.subText }]}>2</Text>
                 </View>
                 <Text style={[styles.stepText, styles.stepTextInactive]}>{t('step_address')}</Text>
             </View>
-            <View style={[styles.stepLine, styles.stepLineInactive]} />
+            <View style={[styles.stepLine, styles.stepLineInactive, { backgroundColor: darkMode ? '#333' : '#eee' }]} />
             <View style={styles.step}>
-                <View style={[styles.stepCircle, styles.stepInactive]}>
-                    <Text style={styles.stepNumber}>3</Text>
+                <View style={[styles.stepCircle, styles.stepInactive, { backgroundColor: darkMode ? '#333' : '#eee' }]}>
+                    <Text style={[styles.stepNumber, { color: colors.subText }]}>3</Text>
                 </View>
                 <Text style={[styles.stepText, styles.stepTextInactive]}>{t('step_payment')}</Text>
             </View>
@@ -113,26 +113,26 @@ const CartScreen = () => {
                 <View style={styles.cardActions}>
                     <View style={styles.qtyContainer}>
                         <TouchableOpacity
-                            style={[styles.qtyBtn, item.quantity <= 1 && styles.qtyBtnDisabled]}
+                            style={[styles.qtyBtn, item.quantity <= 1 && styles.qtyBtnDisabled, { borderColor: colors.border, backgroundColor: colors.background }]}
                             onPress={() => handleQuantityChange(item.id, item.quantity - 1)}
                             disabled={loading}
                         >
-                            <Ionicons name="remove" size={16} color="#333" />
+                            <Ionicons name="remove" size={16} color={colors.text} />
                         </TouchableOpacity>
                         <View style={styles.qtyValueContainer}>
-                            <Text style={styles.qtyValue}>{item.quantity}</Text>
+                            <Text style={[styles.qtyValue, { color: colors.text }]}>{item.quantity}</Text>
                         </View>
                         <TouchableOpacity
-                            style={styles.qtyBtn}
+                            style={[styles.qtyBtn, { borderColor: colors.border, backgroundColor: colors.background }]}
                             onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
                             disabled={loading}
                         >
-                            <Ionicons name="add" size={16} color="#333" />
+                            <Ionicons name="add" size={16} color={colors.text} />
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity style={styles.removeBtn} onPress={() => confirmRemove(item.id)}>
-                        <Ionicons name="trash-outline" size={18} color="#666" />
-                        <Text style={styles.removeText}>{t('remove')}</Text>
+                        <Ionicons name="trash-outline" size={18} color={colors.subText} />
+                        <Text style={[styles.removeText, { color: colors.subText }]}>{t('remove')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -141,16 +141,16 @@ const CartScreen = () => {
 
     if (cart.length === 0) {
         return (
-            <SafeAreaView style={styles.emptyContainer} edges={['top', 'left', 'right']}>
+            <SafeAreaView style={[styles.emptyContainer, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
                 <StepIndicator />
-                <View style={styles.emptyContent}>
+                <View style={[styles.emptyContent, { backgroundColor: colors.background }]}>
                     <Image
                         source={{ uri: 'https://cdn-icons-png.flaticon.com/512/11329/11329060.png' }}
                         style={styles.emptyImage}
                         resizeMode="contain"
                     />
-                    <Text style={styles.emptyTitle}>{t('empty_cart')}</Text>
-                    <Text style={styles.emptySubtitle}>{t('empty_cart_msg')}</Text>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('empty_cart')}</Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.subText }]}>{t('empty_cart_msg')}</Text>
                     <TouchableOpacity style={styles.shopNowBtn} onPress={() => navigation.navigate('Home')}>
                         <Text style={styles.shopNowText}>{t('start_shopping')}</Text>
                     </TouchableOpacity>
@@ -174,8 +174,8 @@ const CartScreen = () => {
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Delivery Bar */}
                 {cartTotal < 1000 && (
-                    <View style={styles.deliveryBar}>
-                        <Text style={styles.deliveryBarText}>{t('add_items_worth')}<Text style={{ fontWeight: 'bold' }}>₹{1000 - cartTotal}</Text>{t('for_free_delivery')}</Text>
+                    <View style={[styles.deliveryBar, { backgroundColor: darkMode ? '#2C2C1E' : '#FFF8E1' }]}>
+                        <Text style={[styles.deliveryBarText, { color: colors.text }]}>{t('add_items_worth')}<Text style={{ fontWeight: 'bold' }}>₹{1000 - cartTotal}</Text>{t('for_free_delivery')}</Text>
                     </View>
                 )}
 
@@ -186,7 +186,7 @@ const CartScreen = () => {
 
                 {/* Price Details */}
                 <View style={[styles.priceDetailsCard, { backgroundColor: colors.card }]}>
-                    <Text style={styles.priceTitle}>{t('price_details')} ({cart.length} items)</Text>
+                    <Text style={[styles.priceTitle, { color: colors.subText }]}>{t('price_details')} ({cart.length} items)</Text>
                     <View style={styles.priceRowDetails}>
                         <Text style={[styles.priceLabel, { color: colors.text }]}>{t('total_mrp')}</Text>
                         <Text style={[styles.priceValue, { color: colors.text }]}>₹{totalMRP.toLocaleString()}</Text>
@@ -213,18 +213,18 @@ const CartScreen = () => {
                 </View>
 
                 {/* Trust Badges */}
-                <View style={styles.trustContainer}>
+                <View style={[styles.trustContainer, { backgroundColor: colors.card }]}>
                     <View style={styles.trustItem}>
-                        <MaterialCommunityIcons name="shield-check-outline" size={24} color="#666" />
-                        <Text style={styles.trustText}>{t('secure_payments')}</Text>
+                        <MaterialCommunityIcons name="shield-check-outline" size={24} color={colors.subText} />
+                        <Text style={[styles.trustText, { color: colors.subText }]}>{t('secure_payments')}</Text>
                     </View>
                     <View style={styles.trustItem}>
-                        <MaterialCommunityIcons name="cached" size={24} color="#666" />
-                        <Text style={styles.trustText}>{t('easy_returns')}</Text>
+                        <MaterialCommunityIcons name="cached" size={24} color={colors.subText} />
+                        <Text style={[styles.trustText, { color: colors.subText }]}>{t('easy_returns')}</Text>
                     </View>
                     <View style={styles.trustItem}>
-                        <MaterialCommunityIcons name="check-decagram-outline" size={24} color="#666" />
-                        <Text style={styles.trustText}>{t('authentic_products')}</Text>
+                        <MaterialCommunityIcons name="check-decagram-outline" size={24} color={colors.subText} />
+                        <Text style={[styles.trustText, { color: colors.subText }]}>{t('authentic_products')}</Text>
                     </View>
                 </View>
 
@@ -234,7 +234,7 @@ const CartScreen = () => {
             {/* Sticky Bottom Bar */}
             <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <View>
-                    <Text style={styles.bottomTotalLabel}>{t('total_amount')}</Text>
+                    <Text style={[styles.bottomTotalLabel, { color: colors.subText }]}>{t('total_amount')}</Text>
                     <Text style={[styles.bottomTotalValue, { color: colors.text }]}>₹{finalAmount.toLocaleString()}</Text>
                 </View>
                 <TouchableOpacity
