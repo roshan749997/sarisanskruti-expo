@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
     View,
     Text,
@@ -16,7 +16,8 @@ import {
     KeyboardAvoidingView,
     Platform,
     LayoutAnimation,
-    BackHandler
+    BackHandler,
+    FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +26,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
-import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useRoute, useScrollToTop } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage, LANGUAGES } from '../context/LanguageContext';
@@ -41,18 +42,18 @@ const AVATARS = [
     'https://cdn-icons-png.flaticon.com/512/4140/4140052.png',
 ];
 
-const OrderCard = ({ order }: { order: any }) => {
+const OrderCard = memo(({ order }: { order: any }) => {
     const { colors } = useTheme();
     const navigation = useNavigation();
     const [expanded, setExpanded] = useState(false);
-    const toggleExpand = () => {
+    const toggleExpand = useCallback(() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpanded(!expanded);
-    };
+    }, [expanded]);
 
     // Get first item image for preview
-    const firstItem = order.items?.[0];
-    const previewImage = firstItem?.product?.images?.image1;
+    const firstItem = useMemo(() => order.items?.[0], [order.items]);
+    const previewImage = useMemo(() => firstItem?.product?.images?.image1, [firstItem]);
 
     return (
         <TouchableOpacity activeOpacity={0.9} onPress={toggleExpand} style={[styles.orderCard, { backgroundColor: colors.card }]}>
@@ -115,7 +116,7 @@ const OrderCard = ({ order }: { order: any }) => {
             )}
         </TouchableOpacity>
     );
-};
+});
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -138,6 +139,10 @@ const ProfileScreen = () => {
     const navigation = useNavigation<any>();
     const isFocused = useIsFocused();
     const route = useRoute<any>();
+    const scrollViewRef = React.useRef<any>(null);
+
+    // Enable scroll to top when tab is pressed
+    useScrollToTop(scrollViewRef);
 
     const [orders, setOrders] = useState<any[]>([]);
     const [addresses, setAddresses] = useState<any[]>([]);
@@ -184,7 +189,7 @@ const ProfileScreen = () => {
         // Language settings handled by context now
     }, []);
 
-    const handleUpdatePassword = async () => {
+    const handleUpdatePassword = useCallback(async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
             Alert.alert('Error', 'Please fill all fields');
             return;
@@ -211,7 +216,7 @@ const ProfileScreen = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPassword, newPassword, confirmPassword]);
 
     // Language application is now direct via context in modal
 
@@ -228,39 +233,39 @@ const ProfileScreen = () => {
         return () => backHandler.remove();
     }, [viewMode]);
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             const [ordersRes, addressRes] = await Promise.allSettled([api.getMyOrders(), api.getMyAddress()]);
             if (ordersRes.status === 'fulfilled') setOrders(Array.isArray(ordersRes.value) ? ordersRes.value : []);
             if (addressRes.status === 'fulfilled') setAddresses(addressRes.value ? [addressRes.value] : []);
         } catch (e) { console.error(e); }
-    };
+    }, []);
 
-    const onRefresh = async () => {
+    const onRefresh = useCallback(async () => {
         setRefreshing(true);
         await loadData();
         if (token) {
             try { const updatedUser = await api.me(); if (updatedUser) signIn(token, updatedUser); } catch (e) { }
         }
         setRefreshing(false);
-    };
+    }, [loadData, token, signIn]);
 
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         Alert.alert('Log Out', 'Are you sure?', [{ text: 'Cancel' }, {
             text: 'Log Out', style: 'destructive', onPress: async () => {
                 setLoading(true); await signOut(); clearCart(); navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); setLoading(false);
             }
         }]);
-    };
+    }, [signOut, clearCart, navigation]);
 
-    const openEditProfile = () => {
+    const openEditProfile = useCallback(() => {
         setEditName(user?.name || '');
         setEditPhone(user?.phone || '');
         setEditAvatar(user?.avatar || AVATARS[0]);
         setEditModalVisible(true);
-    };
+    }, [user]);
 
-    const handleUpdateProfile = async () => {
+    const handleUpdateProfile = useCallback(async () => {
         if (!editName.trim()) { Alert.alert('Invalid Name'); return; }
         setUpdating(true);
         try {
@@ -268,36 +273,36 @@ const ProfileScreen = () => {
             if (token) { const u = await api.me(); signIn(token, u); }
             setEditModalVisible(false); onRefresh(); Alert.alert("Updated");
         } catch { Alert.alert("Error updating profile"); } finally { setUpdating(false); }
-    };
+    }, [editName, editPhone, editAvatar, token, signIn, onRefresh]);
 
     // --- Render Components ---
-    const QuickBtn = ({ icon, label, onPress, color = '#2874F0' }: any) => (
+    const QuickBtn = memo(({ icon, label, onPress, color = '#2874F0' }: any) => (
         <TouchableOpacity style={styles.quickBtn} onPress={onPress}>
             <View style={[styles.quickIconCircle, { borderColor: color + '40', backgroundColor: color + '10' }]}>
                 <Ionicons name={icon} size={22} color={color} />
             </View>
             <Text style={[styles.quickLabel, { color: colors.text }]}>{label}</Text>
         </TouchableOpacity>
-    );
+    ));
 
-    const MenuItem = ({ icon, label, onPress, color = '#2874F0' }: any) => (
+    const MenuItem = memo(({ icon, label, onPress, color = '#2874F0' }: any) => (
         <TouchableOpacity style={[styles.menuItem, darkMode && styles.borderDark]} onPress={onPress} activeOpacity={0.7}>
             <Ionicons name={icon} size={22} color={color} style={{ marginRight: 16 }} />
             <Text style={[styles.menuLabel, darkMode && styles.textDark]}>{label}</Text>
             <Ionicons name="chevron-forward" size={16} color={darkMode ? "#555" : "#bbb"} />
         </TouchableOpacity>
-    );
+    ));
 
-    const HeaderSubHandler = ({ title }: any) => (
+    const HeaderSubHandler = memo(({ title }: any) => (
         <View style={[styles.subHeader, { backgroundColor: colors.card }]}>
             <TouchableOpacity onPress={() => setViewMode('menu')} style={{ padding: 8, marginLeft: -8 }}>
                 <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.subHeaderTitle, { color: colors.text }]}>{title}</Text>
         </View>
-    );
+    ));
 
-    const renderMenu = () => (
+    const renderMenu = useCallback(() => (
         <>
             <View style={[styles.header, darkMode && styles.headerDark]}>
                 <View style={styles.userInfo}>
@@ -315,7 +320,7 @@ const ProfileScreen = () => {
                 <QuickBtn icon="headset-outline" label="Help" onPress={() => navigation.navigate('Static', { type: 'contact' })} color="#4CAF50" />
             </View>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+            <ScrollView ref={scrollViewRef} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
                 <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>{t('account_settings')}</Text>
                 <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
                     <MenuItem icon="person-outline" label="My Profile" onPress={() => setProfileViewModalVisible(true)} />
@@ -352,19 +357,32 @@ const ProfileScreen = () => {
                 <Text style={styles.version}>Sari Sanskruti v2.1.0</Text>
             </ScrollView>
         </>
-    );
+    ), [darkMode, user, t, refreshing, onRefresh, colors, handleLogout, navigation, toggleDarkMode]);
 
-    const renderOrdersView = () => (
+    const renderOrdersView = useCallback(() => (
         <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title={`My Orders (${orders.length})`} />
-            <ScrollView contentContainerStyle={styles.subScroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-                {orders.length === 0 ? <EmptyState lottie="https://assets9.lottiefiles.com/packages/lf20_sif17k.json" title="No orders yet" subtitle="Items you buy will appear here" /> :
-                    orders.map((o, i) => <OrderCard key={i} order={o} />)}
-            </ScrollView>
+            {orders.length === 0 ? (
+                <ScrollView contentContainerStyle={styles.subScroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+                    <EmptyState lottie="https://assets9.lottiefiles.com/packages/lf20_sif17k.json" title="No orders yet" subtitle="Items you buy will appear here" />
+                </ScrollView>
+            ) : (
+                <FlatList
+                    data={orders}
+                    keyExtractor={(item, index) => item._id || `order-${index}`}
+                    renderItem={({ item }) => <OrderCard order={item} />}
+                    contentContainerStyle={styles.subScroll}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={5}
+                    windowSize={5}
+                    initialNumToRender={5}
+                />
+            )}
         </View>
-    );
+    ), [orders, colors.background, refreshing, onRefresh]);
 
-    const renderAddressesView = () => (
+    const renderAddressesView = useCallback(() => (
         <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title="My Addresses" />
             <ScrollView contentContainerStyle={styles.subScroll}>
@@ -390,15 +408,25 @@ const ProfileScreen = () => {
                 ))}
             </ScrollView>
         </View>
-    );
+    ), [addresses, colors, navigation]);
 
-    const renderWishlistView = () => (
+    const renderWishlistView = useCallback(() => (
         <View style={[styles.subView, { backgroundColor: colors.background }]}>
             <HeaderSubHandler title={`My Wishlist (${wishlist.length})`} />
-            <ScrollView contentContainerStyle={styles.subScroll}>
-                {wishlist.length === 0 ? <EmptyState lottie="https://assets5.lottiefiles.com/packages/lf20_jbrw3hcz.json" title="Wishlist is empty" subtitle="Save your favorite items here" /> :
-                    wishlist.map((item, i) => (
-                        <TouchableOpacity key={i} style={[styles.wishlistItem, { backgroundColor: colors.card }]} onPress={() => navigation.navigate('ProductDetail', { id: item._id })} activeOpacity={0.8}>
+            {wishlist.length === 0 ? (
+                <ScrollView contentContainerStyle={styles.subScroll}>
+                    <EmptyState lottie="https://assets5.lottiefiles.com/packages/lf20_jbrw3hcz.json" title="Wishlist is empty" subtitle="Save your favorite items here" />
+                </ScrollView>
+            ) : (
+                <FlatList
+                    data={wishlist}
+                    keyExtractor={(item, index) => item._id || `wishlist-${index}`}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={[styles.wishlistItem, { backgroundColor: colors.card }]}
+                            onPress={() => navigation.navigate('ProductDetail', { id: item._id })}
+                            activeOpacity={0.8}
+                        >
                             <Image source={{ uri: item.images?.image1 }} style={styles.wishlistImg} />
                             <View style={{ flex: 1, marginLeft: 16 }}>
                                 <Text numberOfLines={1} style={[styles.wishlistTitle, { color: colors.text }]}>{item.title}</Text>
@@ -409,18 +437,24 @@ const ProfileScreen = () => {
                                 <Ionicons name="trash-outline" size={22} color={colors.subText} />
                             </TouchableOpacity>
                         </TouchableOpacity>
-                    ))}
-            </ScrollView>
+                    )}
+                    contentContainerStyle={styles.subScroll}
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={10}
+                    windowSize={5}
+                    initialNumToRender={10}
+                />
+            )}
         </View>
-    );
+    ), [wishlist, colors, navigation]);
 
-    const EmptyState = ({ lottie, title, subtitle }: any) => (
+    const EmptyState = memo(({ lottie, title, subtitle }: any) => (
         <View style={{ alignItems: 'center', marginTop: 80 }}>
             <LottieView source={{ uri: lottie }} autoPlay loop style={{ width: 180, height: 180 }} />
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text, marginTop: 20 }}>{title}</Text>
             {subtitle && <Text style={{ fontSize: 14, color: colors.subText, marginTop: 5 }}>{subtitle}</Text>}
         </View>
-    );
+    ));
 
     return (
         <SafeAreaView style={[styles.container, darkMode && styles.containerDark]} edges={['top']}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,10 +23,14 @@ const { width } = Dimensions.get('window');
 
 const CartScreen = () => {
     const navigation = useNavigation<any>();
+    const scrollViewRef = useRef<any>(null);
     const { cart, removeFromCart, updateQuantity, clearCart, cartTotal, loading } = useCart();
     const { user } = useAuth();
     const { colors, darkMode } = useTheme();
     const { t } = useLanguage();
+
+    // Enable scroll to top when tab is pressed
+    useScrollToTop(scrollViewRef);
 
     const handleQuantityChange = (itemId: string, newQty: number) => {
         if (newQty < 1) {
@@ -171,7 +175,7 @@ const CartScreen = () => {
 
             <StepIndicator />
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Delivery Bar */}
                 {cartTotal < 1000 && (
                     <View style={[styles.deliveryBar, { backgroundColor: darkMode ? '#2C2C1E' : '#FFF8E1' }]}>

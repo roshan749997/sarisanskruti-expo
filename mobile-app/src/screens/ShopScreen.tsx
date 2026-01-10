@@ -14,7 +14,7 @@ import {
     NativeSyntheticEvent
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -27,8 +27,12 @@ const ITEM_WIDTH = (width - SPACING * (COL_NUM + 1)) / COL_NUM;
 const ShopScreen = () => {
     const navigation = useNavigation<any>();
     const scrollX = useRef(new Animated.Value(0)).current;
+    const flatListRef = useRef<any>(null);
     const { colors, darkMode } = useTheme();
     const { t } = useLanguage();
+
+    // Enable scroll to top when tab is pressed
+    useScrollToTop(flatListRef);
 
     // Split categories for better layout
     const topCategories = [
@@ -192,6 +196,7 @@ const ShopScreen = () => {
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
             <Header />
             <FlatList
+                ref={flatListRef}
                 data={collections}
                 renderItem={renderGridItem}
                 keyExtractor={(item, index) => index.toString()}

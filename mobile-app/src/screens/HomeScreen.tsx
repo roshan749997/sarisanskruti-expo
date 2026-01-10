@@ -22,7 +22,6 @@ import { useWishlist } from '../context/WishlistContext';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import HeroSlider from '../components/HeroSlider';
-import Footer from '../components/Footer';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -312,28 +311,9 @@ const HomeScreen = () => {
 
   const RenderFooter = useCallback(() => (
     <View style={{ backgroundColor: colors.background }}>
-      {/* Why Choose Us */}
-      <View style={[styles.whyChooseUsSection, { backgroundColor: colors.background }]}>
-        <Text style={[styles.whyChooseUsTitle, { color: colors.text }]}>Why Sarisanskruti?</Text>
-        <View style={styles.whyGrid}>
-          {[
-            { icon: '✨', title: 'Premium Quality', desc: 'Crafted with care' },
-            { icon: '🚚', title: 'Free Shipping', desc: 'Above ₹999' },
-            { icon: '🔄', title: 'Easy Returns', desc: '7-day policy' },
-            { icon: '💎', title: 'Authentic', desc: '100% Original' }
-          ].map((feat, i) => (
-            <View key={i} style={styles.whyCard}>
-              <Text style={styles.whyIcon}>{feat.icon}</Text>
-              <Text style={styles.whyTitle}>{feat.title}</Text>
-              <Text style={styles.whyDesc}>{feat.desc}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-      <Footer />
       <View style={{ height: 80 }} />
     </View>
-  ), []);
+  ), [colors.background]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={[]}>
@@ -620,55 +600,6 @@ const styles = StyleSheet.create({
   gridItemWrapper: {
     width: '48%', // Approx half with spacing
     marginBottom: 16,
-  },
-
-  // Why Choose Us
-  whyChooseUsSection: {
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    borderTopWidth: 8,
-    borderTopColor: '#f9f9f9',
-  },
-  whyChooseUsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 20,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  whyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  whyCard: {
-    width: '48%',
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  whyIcon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  whyTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  whyDesc: {
-    fontSize: 11,
-    color: '#666',
-    textAlign: 'center',
   },
 
   scrollToTopButton: {

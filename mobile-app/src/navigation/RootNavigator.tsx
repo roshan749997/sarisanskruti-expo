@@ -64,14 +64,26 @@ const MainTabs = () => {
                 },
             })}
         >
-            <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('home') }} />
-            <Tab.Screen name="Shop" component={ShopScreen} options={{ title: t('shop') }} />
+            <Tab.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{ title: t('home') }}
+            />
+            <Tab.Screen
+                name="Shop"
+                component={ShopScreen}
+                options={{ title: t('shop') }}
+            />
             <Tab.Screen
                 name="Cart"
                 component={CartScreen}
                 options={{ title: t('cart'), tabBarBadge: cart.length > 0 ? cart.length : undefined }}
             />
-            <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile') }} />
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: t('profile') }}
+            />
         </Tab.Navigator>
     );
 };
