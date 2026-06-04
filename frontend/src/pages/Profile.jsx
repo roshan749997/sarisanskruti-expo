@@ -4,7 +4,60 @@ import { getMyAddress, getMyOrders } from '../services/api';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { FiSettings } from 'react-icons/fi';
 
+const isAuthenticated = () => {
+  try {
+    return Boolean(localStorage.getItem('auth_token'));
+  } catch {
+    return false;
+  }
+};
+
+function GuestProfileView() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center border border-gray-100">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+          <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h1 className="text-xl font-bold text-gray-800 mb-2">Login to view profile</h1>
+        <p className="text-gray-600 text-sm mb-8">
+          Sign in to access your orders, saved addresses, and account details.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/signin', { state: { from: location } })}
+          className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-lg font-semibold mb-3"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/signup')}
+          className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50"
+        >
+          Create Account
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700"
+        >
+          Continue shopping as guest
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function FlipkartAccountSettings() {
+  if (!isAuthenticated()) {
+    return <GuestProfileView />;
+  }
   const initialTab = (() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -54,12 +107,12 @@ export default function FlipkartAccountSettings() {
       console.log('User data received:', userData); // Debug log
       
       if (!userData || !userData.user) {
-        console.error('No user data in response');
-        setLoading(false);
+        localStorage.removeItem('auth_token');
+        window.location.href = '/signin';
         return;
       }
-      
-      const [firstName, ...lastNameParts] = userData.user?.name?.split(' ') || [];
+
+      const [firstName, ...lastNameParts] = (userData.user?.name || '').split(' ').filter(Boolean);
       const lastName = lastNameParts.join(' ');
       // Derive admin from server response and sync to storage for route guards
       const adminStatus = !!userData.user?.isAdmin;
@@ -72,7 +125,7 @@ export default function FlipkartAccountSettings() {
       } catch {}
 
       setUser({
-        firstName: firstName || 'User',
+        firstName: firstName || '',
         lastName: lastName || '',
         email: userData.user?.email || 'Not available',
         mobile: userData.user?.phone || 'Not available',
@@ -81,8 +134,8 @@ export default function FlipkartAccountSettings() {
       setIsAdmin(adminStatus);
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Show error to user
-      alert('Failed to load user profile. Please refresh the page.');
+      localStorage.removeItem('auth_token');
+      window.location.href = '/signin';
     } finally {
       setLoading(false);
     }
@@ -162,7 +215,8 @@ export default function FlipkartAccountSettings() {
   const handleLogout = async () => {
     try {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      localStorage.removeItem('auth_is_admin');
+      window.location.href = '/signin';
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -194,6 +248,9 @@ export default function FlipkartAccountSettings() {
     </div>
   );
 
+  const displayInitial = (user.firstName?.charAt(0) || user.email?.charAt(0) || 'A').toUpperCase();
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'My Account';
+
   const AdminButton = () => (
     <Link to="/admin" className="block">
       <MenuItem
@@ -220,11 +277,11 @@ export default function FlipkartAccountSettings() {
           <div className="lg:hidden bg-white shadow-md px-4 py-4 flex items-center justify-between sticky z-40" style={{ top: 'var(--app-header-height, 0px)' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-black to-gray-800 flex items-center justify-center text-white text-lg font-bold shadow-lg">
-                {user.firstName.charAt(0)}
+                {displayInitial}
               </div>
               <div>
                 <div className="text-xs text-gray-500">Hello,</div>
-                <div className="font-semibold text-gray-800">{user.firstName}</div>
+                <div className="font-semibold text-gray-800">{displayName}</div>
               </div>
             </div>
             <button 
@@ -261,11 +318,11 @@ export default function FlipkartAccountSettings() {
             <div className="hidden lg:block p-6 border-b bg-gradient-to-r from-gray-50 to-gray-100">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-black to-gray-800 flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-red-100">
-                  {user.firstName.charAt(0)}
+                  {displayInitial}
                 </div>
                 <div>
                   <div className="text-xs text-gray-600 font-medium">Hello,</div>
-                  <div className="font-bold text-gray-800 text-lg">{user.firstName} {user.lastName}</div>
+                  <div className="font-bold text-gray-800 text-lg">{displayName}</div>
                 </div>
               </div>
             </div>

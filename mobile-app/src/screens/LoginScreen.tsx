@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,68 +20,20 @@ import { useLanguage } from '../context/LanguageContext';
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
-  const { colors, darkMode } = useTheme();
+  const { colors } = useTheme();
   const { t } = useLanguage();
-  const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    phone: '',
-    otp: '',
   });
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpTimer, setOtpTimer] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // OTP Timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (otpTimer > 0) {
-      interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (otpTimer === 0 && interval) {
-      clearInterval(interval);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [otpTimer]);
+  const getUserFriendlyError = (err: any): string => {
+    if (err.response) {
+      const status = err.response.status;
+      const message = err.response.data?.message || '';
 
-  const handleSendOTP = async () => {
-    if (!formData.phone) {
-      setError('Please enter your phone number');
-      return;
-    }
-
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      await api.sendOTP({ phone: formData.phone, purpose: 'signin' });
-      setSuccess('OTP sent to your phone number');
-      setOtpSent(true);
-      setOtpTimer(60);
-    } catch (err: any) {
-      const friendlyError = err.response?.status === 404
-        ? 'Phone number not registered. Please sign up first.'
-        : err.response?.status === 400
-          ? 'Please enter a valid 10-digit phone number'
-          : 'Failed to send OTP. Please try again.';
-      setError(friendlyError);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getUserFriendlyError = (error: any): string => {
-    // Check if it's an axios error with response
-    if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.message || '';
-
-      // Handle specific status codes
       switch (status) {
         case 400:
           if (message.toLowerCase().includes('email')) {
@@ -92,56 +43,39 @@ const LoginScreen = () => {
             return 'Password is required';
           }
           return 'Please check your input and try again';
-
         case 401:
-          if (authMode === 'password') {
-            return 'Invalid email or password. Please check and try again.';
-          }
-          return 'Invalid OTP. Please check and try again.';
-
+          return 'Invalid email or password. Please check and try again.';
         case 404:
-          if (authMode === 'password') {
-            return 'No account found with this email address. Please sign up first.';
-          }
-          return 'Phone number not registered. Please sign up first.';
-
+          return 'No account found with this email address. Please sign up first.';
         case 500:
           return 'Server error. Please try again later.';
-
         default:
           return message || 'Something went wrong. Please try again.';
       }
     }
 
-    // Handle network errors
-    if (error.request) {
+    if (err.request) {
       return 'Network error. Please check your internet connection.';
     }
 
-    // Handle other errors
-    return error.message || 'An unexpected error occurred. Please try again.';
+    return err.message || 'An unexpected error occurred. Please try again.';
   };
 
   const handleSubmit = async () => {
+    if (!formData.email.trim() || !formData.password) {
+      setError(t('fill_all_fields'));
+      return;
+    }
+
     setError('');
-    setSuccess('');
     setLoading(true);
 
     try {
-      let resp;
+      const resp = await api.signin({
+        email: formData.email.trim(),
+        password: formData.password,
+      });
 
-      if (authMode === 'otp') {
-        if (!otpSent) {
-          await handleSendOTP();
-          setLoading(false);
-          return;
-        }
-        resp = await api.verifyOTPSignin({ phone: formData.phone, otp: formData.otp });
-      } else {
-        resp = await api.signin({ email: formData.email, password: formData.password });
-      }
-
-      // Sign in using AuthContext
       if (resp?.token) {
         await signIn(resp.token);
         navigation.navigate('MainTab', { screen: 'Home' });
@@ -165,164 +99,60 @@ const LoginScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo */}
           <View style={styles.logoContainer}>
             <Text style={styles.logoText}>sarisanskruti</Text>
           </View>
 
-          {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t('login_title')}</Text>
-            <Text style={[styles.subtitle, { color: colors.subText }]}>Sign in to your account to continue shopping</Text>
+            <Text style={[styles.subtitle, { color: colors.subText }]}>
+              Sign in to your account to continue shopping
+            </Text>
           </View>
 
-          {/* Form */}
           <View style={[styles.formCard, { backgroundColor: colors.card }]}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-            {/* Auth Mode Toggle */}
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  authMode === 'password' && styles.toggleButtonActive
-                ]}
-                onPress={() => {
-                  setAuthMode('password');
-                  setOtpSent(false);
-                  setError('');
-                  setSuccess('');
-                }}
-              >
-                <Text style={[
-                  styles.toggleText,
-                  authMode === 'password' && styles.toggleTextActive
-                ]}>{t('password_label')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  authMode === 'otp' && styles.toggleButtonActive
-                ]}
-                onPress={() => {
-                  setAuthMode('otp');
-                  setOtpSent(false);
-                  setError('');
-                  setSuccess('');
-                }}
-              >
-                <Text style={[
-                  styles.toggleText,
-                  authMode === 'otp' && styles.toggleTextActive
-                ]}>{t('login_with_otp')}</Text>
-              </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.subText }]}>{t('email_label')}</Text>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                placeholder={t('email_placeholder')}
+                placeholderTextColor={colors.subText}
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
 
-            {authMode === 'password' ? (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>{t('email_label')}</Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder={t('email_placeholder')}
-                    placeholderTextColor={colors.subText}
-                    value={formData.email}
-                    onChangeText={(text) => setFormData({ ...formData, email: text })}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.subText }]}>{t('password_label')}</Text>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                placeholder={t('password_placeholder')}
+                placeholderTextColor={colors.subText}
+                value={formData.password}
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
+                secureTextEntry
+              />
+            </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>{t('password_label')}</Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder={t('password_placeholder')}
-                    placeholderTextColor={colors.subText}
-                    value={formData.password}
-                    onChangeText={(text) => setFormData({ ...formData, password: text })}
-                    secureTextEntry
-                  />
-                </View>
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={styles.forgotPassword}>{t('forgot_password')}</Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                  <Text style={styles.forgotPassword}>{t('forgot_password')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.subText }]}>{t('phone_label')}</Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder={t('phone_placeholder')}
-                    placeholderTextColor={colors.subText}
-                    value={formData.phone}
-                    onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                    editable={!otpSent}
-                  />
-                </View>
-
-                {otpSent && (
-                  <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.subText }]}>{t('otp_placeholder')}</Text>
-                    <TextInput
-                      style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                      placeholder={t('otp_placeholder')}
-                      placeholderTextColor={colors.subText}
-                      value={formData.otp}
-                      onChangeText={(text) => setFormData({ ...formData, otp: text })}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                    {otpTimer > 0 && (
-                      <Text style={[styles.timerText, { color: colors.subText }]}>Resend OTP in {otpTimer} seconds</Text>
-                    )}
-                  </View>
-                )}
-              </>
-            )}
-
-            {authMode === 'otp' && !otpSent && (
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                onPress={handleSendOTP}
-                disabled={loading || !formData.phone}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>{t('send_otp')}</Text>
-                )}
-              </TouchableOpacity>
-            )}
-
-            {(authMode === 'password' || (authMode === 'otp' && otpSent)) && (
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                onPress={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>{t('sign_in')}</Text>
-                )}
-              </TouchableOpacity>
-            )}
-
-            {authMode === 'otp' && otpSent && otpTimer === 0 && (
-              <TouchableOpacity
-                style={[styles.secondaryButton, { marginTop: 8 }]}
-                onPress={handleSendOTP}
-                disabled={loading}
-              >
-                <Text style={styles.secondaryButtonText}>{t('resend_otp')}</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={[styles.primaryButton, loading && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>{t('sign_in')}</Text>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.secondaryButton, { marginTop: 8 }]}
@@ -396,40 +226,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 12,
   },
-  successText: {
-    color: '#16a34a',
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6b7280',
-  },
-  toggleTextActive: {
-    color: '#f43f5e',
-  },
   inputGroup: {
     marginBottom: 16,
   },
@@ -454,11 +250,6 @@ const styles = StyleSheet.create({
     color: '#f43f5e',
     textAlign: 'right',
     marginBottom: 16,
-  },
-  timerText: {
-    fontSize: 11,
-    color: '#6b7280',
-    marginTop: 4,
   },
   primaryButton: {
     backgroundColor: '#f43f5e',
@@ -508,5 +299,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
-

@@ -114,7 +114,7 @@ const Router = () => {
           {/* Private route(s) */}
           <Route path="cart" element={<RequireAuth><Cart /></RequireAuth>} />
           <Route path="checkout/address" element={<RequireAuth><Address /></RequireAuth>} />
-          <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="profile" element={<Profile />} />
           <Route path="search" element={<Search />} />
         </Route>
 

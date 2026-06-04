@@ -42,6 +42,7 @@ const MainTabs = () => {
 
     return (
         <Tab.Navigator
+            detachInactiveScreens={false}
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarIcon: ({ focused, color, size }) => {

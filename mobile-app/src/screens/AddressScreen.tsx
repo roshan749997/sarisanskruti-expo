@@ -16,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
+import { getSessionCache } from '../services/sessionCache';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -52,27 +53,38 @@ const AddressScreen = () => {
         loadAddress();
     }, []);
 
+    const applyAddressData = (data: any) => {
+        if (data && data._id) {
+            setAddress(data);
+            setFormData({
+                fullName: data.fullName || '',
+                mobileNumber: data.mobileNumber || '',
+                pincode: data.pincode || '',
+                locality: data.locality || '',
+                address: data.address || '',
+                city: data.city || '',
+                state: data.state || '',
+                landmark: data.landmark || '',
+                alternatePhone: data.alternatePhone || '',
+                addressType: data.addressType || 'Home',
+            });
+        } else {
+            setIsEditing(true);
+        }
+    };
+
     const loadAddress = async () => {
+        const cached = getSessionCache<any>('address:me');
+        if (cached !== null) {
+            applyAddressData(cached);
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             const data = await api.getMyAddress();
-            if (data && data._id) {
-                setAddress(data);
-                setFormData({
-                    fullName: data.fullName || '',
-                    mobileNumber: data.mobileNumber || '',
-                    pincode: data.pincode || '',
-                    locality: data.locality || '',
-                    address: data.address || '',
-                    city: data.city || '',
-                    state: data.state || '',
-                    landmark: data.landmark || '',
-                    alternatePhone: data.alternatePhone || '',
-                    addressType: data.addressType || 'Home'
-                });
-            } else {
-                setIsEditing(true);
-            }
+            applyAddressData(data);
         } catch (e) {
             console.log('Error loading address', e);
             setIsEditing(true);

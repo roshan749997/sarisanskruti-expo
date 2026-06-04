@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../services/api';
+import { hasSessionCache } from '../services/sessionCache';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
@@ -71,7 +72,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
         }
         try {
-            if (!silent) setLoading(true);
+            if (!silent && !hasSessionCache('cart')) setLoading(true);
             const data = await api.getCart();
             setCart(mapServerCartToUI(data));
         } catch (error: any) {

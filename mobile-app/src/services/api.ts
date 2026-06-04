@@ -1,11 +1,25 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import {
+  clearSessionCache,
+  getSessionCache,
+  invalidateSessionCache,
+  productListCacheKey,
+  setSessionCache,
+} from './sessionCache';
+
+export { peekProduct, peekProductList } from './sessionCache';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.sarisanskruti.in/api';
 
-// Simple cache for API responses
-const cache: Record<string, { data: any; timestamp: number }> = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+async function cachedGet<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const hit = getSessionCache<T>(key);
+  if (hit !== null) return hit;
+  const data = await fetcher();
+  setSessionCache(key, data);
+  return data;
+}
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -107,8 +121,8 @@ export const api = {
     const res = await apiClient.post('/auth/signin', { email, password });
     return res.data;
   },
-  signup: async (name: string, email: string, password: string, phone: string) => {
-    const res = await apiClient.post('/auth/signup', { name, email, password, phone });
+  signup: async (name: string, email: string, password: string) => {
+    const res = await apiClient.post('/auth/signup', { name, email, password });
     return res.data;
   },
   signin: async (credentials: { email: string; password: string }) => {
@@ -134,22 +148,24 @@ export const api = {
 
   // User
   me: async () => {
-    try {
-      const res = await apiClient.get('/me');
-      return res.data;
-    } catch {
-      const res = await apiClient.get('/auth/me'); // Fallback
-      return res.data;
-    }
+    return cachedGet('user:me', async () => {
+      try {
+        const res = await apiClient.get('/me');
+        return res.data;
+      } catch {
+        const res = await apiClient.get('/auth/me');
+        return res.data;
+      }
+    });
   },
   updateProfile: async (userData: any) => {
-    // Try standard endpoints
     try {
       const res = await apiClient.put('/me', userData);
+      invalidateSessionCache('user');
       return res.data;
-    } catch (e) {
-      // Fallback or just throw
+    } catch {
       const res = await apiClient.put('/auth/me', userData);
+      invalidateSessionCache('user');
       return res.data;
     }
   },
@@ -160,71 +176,67 @@ export const api = {
 
   // Products
   getProducts: async () => {
-    const cacheKey = 'products_all';
-    const now = Date.now();
-
-    // Check cache first
-    if (cache[cacheKey] && (now - cache[cacheKey].timestamp) < CACHE_DURATION) {
-      console.log('📦 Returning cached products');
-      return cache[cacheKey].data;
-    }
-
-    console.log('🌐 Fetching products from API');
-    
-    // Use axios directly without auth interceptor for public endpoints
-    const res = await axios.get(`${API_URL}/products`, {
-      timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const key = productListCacheKey();
+    return cachedGet(key, async () => {
+      const res = await axios.get(`${API_URL}/products`, {
+        timeout: 10000,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return res.data;
     });
-
-    // Store in cache
-    cache[cacheKey] = {
-      data: res.data,
-      timestamp: now
-    };
-
-    return res.data;
   },
   getProductById: async (id: string) => {
-    const res = await apiClient.get(`/products/${id}`);
-    return res.data;
+    return cachedGet(`product:${id}`, async () => {
+      const res = await apiClient.get(`/products/${id}`);
+      return res.data;
+    });
   },
   getProductsByCategory: async (category: string) => {
-    const res = await apiClient.get(`/products?category=${category}`); // Adapting based on standard REST
-    return res.data;
+    const key = productListCacheKey(category);
+    return cachedGet(key, async () => {
+      const res = await apiClient.get(`/products?category=${encodeURIComponent(category)}`);
+      return res.data;
+    });
   },
 
   // Cart
   getCart: async () => {
-    const res = await apiClient.get('/cart');
-    return res.data;
+    return cachedGet('cart', async () => {
+      const res = await apiClient.get('/cart');
+      return res.data;
+    });
   },
   addToCart: async (productId: string, quantity: number = 1) => {
     const res = await apiClient.post('/cart/add', { productId, quantity });
+    invalidateSessionCache('cart');
     return res.data;
   },
   removeFromCart: async (productId: string) => {
     const res = await apiClient.delete(`/cart/remove/${productId}`);
+    invalidateSessionCache('cart');
     return res.data;
   },
 
   // Address
   getMyAddress: async () => {
-    const res = await apiClient.get('/address/me');
-    return res.data;
+    return cachedGet('address:me', async () => {
+      const res = await apiClient.get('/address/me');
+      return res.data;
+    });
   },
   saveMyAddress: async (payload: any) => {
     const res = await apiClient.post('/address', payload);
+    invalidateSessionCache('address');
     return res.data;
   },
   updateAddressById: async (id: string, payload: any) => {
     const res = await apiClient.put(`/address/${id}`, payload);
+    invalidateSessionCache('address');
     return res.data;
   },
   deleteAddressById: async (id: string) => {
     const res = await apiClient.delete(`/address/${id}`);
+    invalidateSessionCache('address');
     return res.data;
   },
 
@@ -239,30 +251,38 @@ export const api = {
   },
   createCODOrder: async () => {
     const res = await apiClient.post('/payment/cod/create');
+    invalidateSessionCache('orders');
+    invalidateSessionCache('cart');
     return res.data;
   },
 
   // Orders
   createOrder: async (orderData: any) => {
     const res = await apiClient.post('/orders', orderData);
+    invalidateSessionCache('orders');
+    invalidateSessionCache('cart');
     return res.data;
   },
   getMyOrders: async () => {
-    const res = await apiClient.get('/orders');
-    return res.data;
+    return cachedGet('orders:mine', async () => {
+      const res = await apiClient.get('/orders');
+      return res.data;
+    });
   },
 
   // Search
   searchProducts: async (query: string) => {
-    const res = await apiClient.get(`/header/search?query=${encodeURIComponent(query)}`);
-    return res.data;
+    const q = query.trim();
+    const key = productListCacheKey(undefined, q);
+    return cachedGet(key, async () => {
+      const res = await apiClient.get(`/header/search?query=${encodeURIComponent(q)}`);
+      return res.data;
+    });
   },
 
-  // Cache management
   clearCache: () => {
-    Object.keys(cache).forEach(key => delete cache[key]);
-    console.log('🗑️ Cache cleared');
-  }
+    clearSessionCache();
+  },
 };
 
 export { apiClient, handleApiError };

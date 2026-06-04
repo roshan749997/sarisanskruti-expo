@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
-import { api } from '../services/api';
+import { api, peekProductList } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -31,10 +31,11 @@ const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, darkMode } = useTheme();
   const { t } = useLanguage();
-  const [products, setProducts] = useState<any[]>([]);
+  const initialProducts = peekProductList() || [];
+  const [products, setProducts] = useState<any[]>(initialProducts);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
   const [trendingNow, setTrendingNow] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const { cartCount, addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -58,25 +59,36 @@ const HomeScreen = () => {
     { name: 'PRINTED SAREES', path: 'ProductList', params: { category: 'printed-sarees' }, image: 'https://res.cloudinary.com/doh8nqbf1/image/upload/v1764155957/b0484146-0b8f-4f41-b27f-8c1ee41a7179.png' },
   ];
 
+  const applyProductData = useCallback((data: any[]) => {
+    const validProducts = data.filter((p) => p.images?.image1);
+    const productsWithDiscount = validProducts.filter((p) => p.discountPercent > 0 || p.discount > 0);
+    const regularProducts = validProducts.filter((p) => !productsWithDiscount.find((d) => d._id === p._id));
+    setProducts(validProducts);
+    setBestSellers([...productsWithDiscount, ...regularProducts].slice(0, 100));
+    setTrendingNow(validProducts.slice(0, 100));
+  }, []);
+
   useEffect(() => {
+    const cached = peekProductList();
+    if (cached?.length) {
+      applyProductData(cached);
+      setLoading(false);
+      return;
+    }
     loadProducts();
   }, []);
 
   const loadProducts = async () => {
+    const cached = peekProductList();
+    if (cached?.length) {
+      applyProductData(cached);
+      setLoading(false);
+      return;
+    }
     try {
-      setLoading(true);
+      if (!products.length) setLoading(true);
       const data = await api.getProducts();
-      if (Array.isArray(data)) {
-        const validProducts = data.filter(p => p.images?.image1);
-        const productsWithDiscount = validProducts.filter(p => p.discountPercent > 0 || p.discount > 0);
-        const regularProducts = validProducts.filter(p => !productsWithDiscount.find(d => d._id === p._id));
-        const bestSellersList = [...productsWithDiscount, ...regularProducts].slice(0, 100);
-        const trendingList = validProducts.slice(0, 100); // Initial 100
-
-        setProducts(validProducts);
-        setBestSellers(bestSellersList);
-        setTrendingNow(trendingList);
-      }
+      if (Array.isArray(data)) applyProductData(data);
     } catch (e) {
       console.log('Failed to load products', e);
     } finally {

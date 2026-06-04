@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const signOut = async () => {
         setToken(null);
         setUser(null);
+        api.clearCache();
         await AsyncStorage.removeItem('auth_token');
         await AsyncStorage.removeItem('user_data');
     };

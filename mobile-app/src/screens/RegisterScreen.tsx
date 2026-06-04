@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -20,40 +20,48 @@ import { useLanguage } from '../context/LanguageContext';
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
-  const { colors, darkMode } = useTheme();
+  const { colors } = useTheme();
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
-    otp: '',
     agreeToTerms: false,
   });
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpTimer, setOtpTimer] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // OTP Timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (otpTimer > 0) {
-      interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (otpTimer === 0 && interval) {
-      clearInterval(interval);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [otpTimer]);
+  const getUserFriendlyError = (err: any): string => {
+    if (err.response) {
+      const status = err.response.status;
+      const message = err.response.data?.message || '';
 
-  const handleSendOTP = async () => {
-    // Validate form fields
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+      switch (status) {
+        case 400:
+          return message || 'Please check your input and try again';
+        case 409:
+          return 'This email is already registered. Please sign in instead.';
+        case 500:
+          return 'Server error. Please try again later.';
+        default:
+          return message || 'Something went wrong. Please try again.';
+      }
+    }
+
+    if (err.request) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    return err.message || 'Failed to create account';
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    setSuccess('');
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
       setError(t('fill_all_fields'));
       return;
     }
@@ -73,63 +81,16 @@ const RegisterScreen = () => {
       return;
     }
 
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      const name = `${formData.firstName} ${formData.lastName}`.trim();
-      const passwordHash = formData.password;
-
-      await api.sendOTP({
-        phone: formData.phone,
-        purpose: 'signup',
-        userData: {
-          name,
-          email: formData.email,
-          passwordHash,
-        },
-      });
-
-      setSuccess(t('otp_sent'));
-      setOtpSent(true);
-      setOtpTimer(60);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    setError('');
-    setSuccess('');
-
-    if (!otpSent) {
-      await handleSendOTP();
-      return;
-    }
-
-    if (!formData.otp) {
-      setError(t('otp_placeholder'));
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError(t('passwords_no_match'));
-      return;
-    }
-
     setLoading(true);
     try {
-      const resp = await api.verifyOTPSignup({
-        phone: formData.phone,
-        otp: formData.otp,
-      });
+      const resp = await api.signup(
+        formData.name.trim(),
+        formData.email.trim(),
+        formData.password
+      );
 
       setSuccess('Account created successfully');
 
-      // Auto-login after successful registration
       if (resp?.token) {
         await signIn(resp.token);
         navigation.navigate('MainTab', { screen: 'Home' });
@@ -137,7 +98,7 @@ const RegisterScreen = () => {
         navigation.navigate('Login');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      setError(getUserFriendlyError(err));
     } finally {
       setLoading(false);
     }
@@ -155,43 +116,31 @@ const RegisterScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo */}
           <View style={styles.logoContainer}>
             <Text style={styles.logoText}>sarisanskruti</Text>
           </View>
 
-          {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>{t('register_title')}</Text>
-            <Text style={[styles.subtitle, { color: colors.subText }]}>Join us to discover stylish kurtas and kurtis with exclusive offers</Text>
+            <Text style={[styles.subtitle, { color: colors.subText }]}>
+              Join us to discover stylish kurtas and kurtis with exclusive offers
+            </Text>
           </View>
 
-          {/* Form */}
           <View style={[styles.formCard, { backgroundColor: colors.card }]}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             {success ? <Text style={styles.successText}>{success}</Text> : null}
 
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>{t('first_name')}</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder={t('first_name')}
-                  placeholderTextColor={colors.subText}
-                  value={formData.firstName}
-                  onChangeText={(text) => setFormData({ ...formData, firstName: text })}
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: colors.subText }]}>{t('last_name')}</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder={t('last_name')}
-                  placeholderTextColor={colors.subText}
-                  value={formData.lastName}
-                  onChangeText={(text) => setFormData({ ...formData, lastName: text })}
-                />
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.subText }]}>{t('full_name')}</Text>
+              <TextInput
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                placeholder={t('full_name')}
+                placeholderTextColor={colors.subText}
+                value={formData.name}
+                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                autoCapitalize="words"
+              />
             </View>
 
             <View style={styles.inputGroup}>
@@ -206,41 +155,6 @@ const RegisterScreen = () => {
                 autoCapitalize="none"
               />
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.subText }]}>{t('phone_label')}</Text>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                placeholder={t('phone_placeholder')}
-                placeholderTextColor={colors.subText}
-                value={formData.phone}
-                onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                keyboardType="phone-pad"
-                maxLength={10}
-                editable={!otpSent}
-              />
-              {otpSent && (
-                <Text style={styles.otpSentText}>✓ {t('otp_sent')}</Text>
-              )}
-            </View>
-
-            {otpSent && (
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.subText }]}>{t('otp_placeholder')}</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  placeholder={t('otp_placeholder')}
-                  placeholderTextColor={colors.subText}
-                  value={formData.otp}
-                  onChangeText={(text) => setFormData({ ...formData, otp: text })}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-                {otpTimer > 0 && (
-                  <Text style={styles.timerText}>Resend OTP in {otpTimer} seconds</Text>
-                )}
-              </View>
-            )}
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
@@ -274,47 +188,20 @@ const RegisterScreen = () => {
               <View style={[styles.checkbox, formData.agreeToTerms && styles.checkboxChecked]}>
                 {formData.agreeToTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.checkboxLabel}>
-                {t('agree_terms')}
-              </Text>
+              <Text style={styles.checkboxLabel}>{t('agree_terms')}</Text>
             </TouchableOpacity>
 
-            {!otpSent ? (
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                onPress={handleSendOTP}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>{t('send_otp')}</Text>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>{t('register_title')}</Text>
-                  )}
-                </TouchableOpacity>
-                {otpTimer === 0 && (
-                  <TouchableOpacity
-                    style={[styles.secondaryButton, { marginTop: 8 }]}
-                    onPress={handleSendOTP}
-                    disabled={loading}
-                  >
-                    <Text style={styles.secondaryButtonText}>{t('resend_otp')}</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
+            <TouchableOpacity
+              style={[styles.primaryButton, loading && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>{t('register_title')}</Text>
+              )}
+            </TouchableOpacity>
 
             <View style={styles.footer}>
               <Text style={[styles.footerText, { color: colors.subText }]}>{t('already_have_account')} </Text>
@@ -409,16 +296,6 @@ const styles = StyleSheet.create({
     color: '#000',
     backgroundColor: '#fff',
   },
-  otpSentText: {
-    fontSize: 11,
-    color: '#16a34a',
-    marginTop: 4,
-  },
-  timerText: {
-    fontSize: 11,
-    color: '#6b7280',
-    marginTop: 4,
-  },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -450,9 +327,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     lineHeight: 18,
   },
-  linkInline: {
-    color: '#f43f5e',
-  },
   primaryButton: {
     backgroundColor: '#f43f5e',
     paddingVertical: 12,
@@ -467,18 +341,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: '#f43f5e',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#f43f5e',
-    fontSize: 14,
     fontWeight: '600',
   },
   buttonDisabled: {
@@ -501,5 +363,3 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
-
-

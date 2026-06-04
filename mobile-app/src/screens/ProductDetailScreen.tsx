@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { api } from '../services/api';
+import { api, peekProduct } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -39,9 +39,10 @@ const ProductDetailScreen = () => {
     const { addToCart, cartCount } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-    const [product, setProduct] = useState<any>(null);
+    const cachedProduct = id ? peekProduct(id) : null;
+    const [product, setProduct] = useState<any>(cachedProduct);
     const [similarProducts, setSimilarProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!cachedProduct);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [selectedSize, setSelectedSize] = useState('M');
     const [isAdding, setIsAdding] = useState(false);
@@ -71,20 +72,29 @@ const ProductDetailScreen = () => {
         loadProduct();
     }, [id]);
 
+    const loadSimilar = (data: any) => {
+        if (!data?.category) return;
+        api.getProductsByCategory(data.category).then((sim) => {
+            if (Array.isArray(sim)) {
+                setSimilarProducts(sim.filter((p) => p._id !== data._id).slice(0, 10));
+            }
+        }).catch((e) => console.log('Similar err', e));
+    };
+
     const loadProduct = async () => {
+        const cached = peekProduct(id);
+        if (cached) {
+            setProduct(cached);
+            setLoading(false);
+            loadSimilar(cached);
+            return;
+        }
+
         try {
             setLoading(true);
             const data = await api.getProductById(id);
             setProduct(data);
-
-            // Load Similar
-            if (data?.category) {
-                api.getProductsByCategory(data.category).then(sim => {
-                    if (Array.isArray(sim)) {
-                        setSimilarProducts(sim.filter(p => p._id !== data._id).slice(0, 10));
-                    }
-                }).catch(e => console.log('Similar err', e));
-            }
+            loadSimilar(data);
         } catch (e) {
             console.log('Error loading product', e);
             Alert.alert('Error', 'Failed to load product details');

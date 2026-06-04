@@ -26,7 +26,8 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
-import { useNavigation, useIsFocused, useRoute, useScrollToTop } from '@react-navigation/native';
+import { invalidateSessionCache } from '../services/sessionCache';
+import { useNavigation, useRoute, useScrollToTop } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage, LANGUAGES } from '../context/LanguageContext';
@@ -129,6 +130,7 @@ const getStatusColor = (status: string) => {
 const ProfileScreen = () => {
     const { user: contextUser, token, signOut, signIn } = useAuth();
     const user = contextUser?.user || contextUser;
+    const isLoggedIn = !!token;
 
     // View Mode
     const [viewMode, setViewMode] = useState('menu');
@@ -137,9 +139,9 @@ const ProfileScreen = () => {
     const { wishlist } = useWishlist();
     const { clearCart } = useCart();
     const navigation = useNavigation<any>();
-    const isFocused = useIsFocused();
     const route = useRoute<any>();
     const scrollViewRef = React.useRef<any>(null);
+    const profileDataLoadedRef = React.useRef(false);
 
     // Enable scroll to top when tab is pressed
     useScrollToTop(scrollViewRef);
@@ -221,8 +223,17 @@ const ProfileScreen = () => {
     // Language application is now direct via context in modal
 
     useEffect(() => {
-        if (isFocused) loadData();
-    }, [isFocused]);
+        if (!token) {
+            profileDataLoadedRef.current = false;
+            setOrders([]);
+            setAddresses([]);
+            return;
+        }
+        if (profileDataLoadedRef.current) return;
+        loadData().then(() => {
+            profileDataLoadedRef.current = true;
+        });
+    }, [token, loadData]);
 
     useEffect(() => {
         const backAction = () => {
@@ -234,16 +245,26 @@ const ProfileScreen = () => {
     }, [viewMode]);
 
     const loadData = useCallback(async () => {
+        if (!token) {
+            setOrders([]);
+            setAddresses([]);
+            return;
+        }
         try {
             const [ordersRes, addressRes] = await Promise.allSettled([api.getMyOrders(), api.getMyAddress()]);
             if (ordersRes.status === 'fulfilled') setOrders(Array.isArray(ordersRes.value) ? ordersRes.value : []);
             if (addressRes.status === 'fulfilled') setAddresses(addressRes.value ? [addressRes.value] : []);
         } catch (e) { console.error(e); }
-    }, []);
+    }, [token]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
+        invalidateSessionCache('orders');
+        invalidateSessionCache('address');
+        invalidateSessionCache('user');
+        profileDataLoadedRef.current = false;
         await loadData();
+        profileDataLoadedRef.current = true;
         if (token) {
             try { const updatedUser = await api.me(); if (updatedUser) signIn(token, updatedUser); } catch (e) { }
         }
@@ -302,20 +323,36 @@ const ProfileScreen = () => {
         </View>
     ));
 
+    const goToLogin = useCallback(() => navigation.navigate('Login'), [navigation]);
+
     const renderMenu = useCallback(() => (
         <>
             <View style={[styles.header, darkMode && styles.headerDark]}>
                 <View style={styles.userInfo}>
-                    <Text style={styles.heyText}>{t('hello')},</Text>
-                    <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name || t('guest_user')}</Text>
+                    {isLoggedIn ? (
+                        <>
+                            <Text style={styles.heyText}>{t('hello')},</Text>
+                            <Text style={[styles.userName, darkMode && styles.textDark]}>{user?.name}</Text>
+                        </>
+                    ) : (
+                        <Text style={[styles.userName, darkMode && styles.textDark, { marginTop: 8 }]}>
+                            {t('login_to_view')}
+                        </Text>
+                    )}
                 </View>
                 <View>
-                    <Image source={{ uri: user?.avatar || AVATARS[0] }} style={styles.profilePic} />
+                    {isLoggedIn ? (
+                        <Image source={{ uri: user?.avatar || AVATARS[0] }} style={styles.profilePic} />
+                    ) : (
+                        <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                            <Ionicons name="person-outline" size={36} color="#9ca3af" />
+                        </View>
+                    )}
                 </View>
             </View>
 
             <View style={[styles.gridContainer, darkMode && styles.menuGroupDark]}>
-                <QuickBtn icon="cube-outline" label={t('my_orders')} onPress={() => setViewMode('orders')} color="#2874F0" />
+                <QuickBtn icon="cube-outline" label={t('my_orders')} onPress={() => isLoggedIn ? setViewMode('orders') : goToLogin()} color="#2874F0" />
                 <QuickBtn icon="heart-outline" label={t('my_wishlist')} onPress={() => setViewMode('wishlist')} color="#FF4081" />
                 <QuickBtn icon="headset-outline" label="Help" onPress={() => navigation.navigate('Static', { type: 'contact' })} color="#4CAF50" />
             </View>
@@ -323,8 +360,8 @@ const ProfileScreen = () => {
             <ScrollView ref={scrollViewRef} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
                 <Text style={[styles.sectionHeader, darkMode && styles.subTextDark]}>{t('account_settings')}</Text>
                 <View style={[styles.menuGroup, darkMode && styles.menuGroupDark]}>
-                    <MenuItem icon="person-outline" label="My Profile" onPress={() => setProfileViewModalVisible(true)} />
-                    <MenuItem icon="location-outline" label={t('saved_addresses')} onPress={() => setViewMode('addresses')} />
+                    <MenuItem icon="person-outline" label="My Profile" onPress={() => isLoggedIn ? setProfileViewModalVisible(true) : goToLogin()} />
+                    <MenuItem icon="location-outline" label={t('saved_addresses')} onPress={() => isLoggedIn ? setViewMode('addresses') : goToLogin()} />
                     <MenuItem icon="notifications-outline" label={t('notifications')} onPress={() => setNotificationsModalVisible(true)} color="#FF6F00" />
                     <MenuItem icon="language-outline" label={t('select_language')} onPress={() => setLanguageModalVisible(true)} />
                 </View>
@@ -350,14 +387,28 @@ const ProfileScreen = () => {
                     <MenuItem icon="information-circle-outline" label={t('about_us')} onPress={() => navigation.navigate('Static', { type: 'about' })} color="#607D8B" />
                 </View>
 
-                <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleLogout}>
-                    <Text style={styles.logoutText}>{t('log_out')}</Text>
-                </TouchableOpacity>
+                {isLoggedIn ? (
+                    <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleLogout}>
+                        <Text style={styles.logoutText}>{t('log_out')}</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={styles.authActions}>
+                        <TouchableOpacity style={styles.loginBtn} onPress={goToLogin}>
+                            <Text style={styles.loginBtnText}>{t('sign_in')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.registerBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                            onPress={() => navigation.navigate('Register')}
+                        >
+                            <Text style={[styles.registerBtnText, { color: colors.text }]}>{t('register_title')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 <Text style={styles.version}>Sari Sanskruti v2.1.0</Text>
             </ScrollView>
         </>
-    ), [darkMode, user, t, refreshing, onRefresh, colors, handleLogout, navigation, toggleDarkMode]);
+    ), [darkMode, user, isLoggedIn, t, refreshing, onRefresh, colors, handleLogout, navigation, toggleDarkMode, goToLogin]);
 
     const renderOrdersView = useCallback(() => (
         <View style={[styles.subView, { backgroundColor: colors.background }]}>
@@ -523,7 +574,7 @@ const ProfileScreen = () => {
                                     </View>
                                 </View>
                                 <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text, marginTop: 16 }}>
-                                    {user?.name || 'Guest User'}
+                                    {user?.name}
                                 </Text>
                                 <Text style={{ fontSize: 14, color: colors.subText, marginTop: 4 }}>
                                     Member since {new Date(user?.createdAt || Date.now()).getFullYear()}
@@ -783,6 +834,27 @@ const styles = StyleSheet.create({
     heyText: { fontSize: 13, color: '#666' },
     userName: { fontSize: 20, fontWeight: 'bold', color: '#000', marginTop: 2 },
     profilePic: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#eee' },
+    profilePicPlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    authActions: { marginTop: 8, gap: 10 },
+    loginBtn: {
+        backgroundColor: '#f43f5e',
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: 20,
+    },
+    loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    registerBtn: {
+        borderWidth: 1,
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: 20,
+    },
+    registerBtnText: { fontSize: 16, fontWeight: '600' },
     editIconBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#2874F0', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
 
     // Quick Grid

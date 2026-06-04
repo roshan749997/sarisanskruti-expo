@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { api } from '../services/api';
+import { api, peekProductList } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -35,9 +35,10 @@ const ProductListScreen = () => {
     const { colors, darkMode } = useTheme();
     const { t } = useLanguage();
 
-    const [products, setProducts] = useState<any[]>([]);
-    const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const cachedOnMount = peekProductList(category, search);
+    const [products, setProducts] = useState<any[]>(cachedOnMount || []);
+    const [filteredProducts, setFilteredProducts] = useState<any[]>(cachedOnMount || []);
+    const [loading, setLoading] = useState(!cachedOnMount?.length);
 
     // UI State
     const [sortModalVisible, setSortModalVisible] = useState(false);
@@ -66,6 +67,14 @@ const ProductListScreen = () => {
     }, [products, sortOption, selectedPriceRanges, selectedFabrics]);
 
     const loadProducts = async () => {
+        const cached = peekProductList(category, search);
+        if (cached?.length) {
+            setProducts(cached);
+            setFilteredProducts(cached);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
             let data;
