@@ -6,7 +6,7 @@
 **Platform:** React Native (Expo)  
 **Language:** TypeScript  
 **Version:** 1.0.0  
-**Package:** com.roshan_10062003.sarisanskrutimobile
+**Package:** com.sarisanskruti.app
 
 ---
 

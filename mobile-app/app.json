@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/app_logo.png",
-      "bundleIdentifier": "com.roshan10062003.sarisanskrutimobile"
+      "bundleIdentifier": "com.sarisanskruti.app"
     },
     "android": {
       "icon": "./assets/app_logo.png",
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/app_logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.roshan_10062003.sarisanskrutimobile"
+      "package": "com.sarisanskruti.app"
     },
     "web": {},
     "extra": {
